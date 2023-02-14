@@ -181,9 +181,37 @@ int modify_value(LinkedList* list, int key, Request* value) {
   * Delete an entry with the given key.
   * Return -1 in case the key is not found.
   */
-// int delete_key(LinkedList* list, int key) {
+int delete_key(LinkedList* list, int key) {
+  Entry* entry = search(list, key);
+  if (entry == NULL) {
+    perror("¡La Key introducida no existe!");
+    return -1;
+  }
 
-// }
+  // If the entry is the head of the list, delete it.
+  if (entry == list->head) {
+    list->head = entry->next;
+    delete_entry(entry);
+    list->size--;
+    return 0;
+  }
+
+  // If the entry is not the head of the list, delete it.
+  Entry* previous = list->head;
+  Entry* current = list->head->next;
+  while(current != NULL) {
+    if (current == entry) {
+      previous->next = current->next;
+      delete_entry(current);
+      list->size--;
+      return 0;
+    }
+    previous = current;
+    current = current->next;
+  }
+
+  return -1;
+}
 
 /**
   * Check if an entry with the given key exists.
@@ -226,6 +254,7 @@ int main() {
   set_value(list, 4, NULL);
   set_value(list, 2, NULL);
   set_value(list, 3, NULL);
+  delete_key(list, 4);
   display_list(list);
   delete_linked_list(list);
 }
