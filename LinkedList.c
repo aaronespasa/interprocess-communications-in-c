@@ -28,7 +28,7 @@ Entry* search(LinkedList *list, int key) {
   return NULL;
 }
 
-Entry* CreateEntry(int key, Request* value) {
+Entry* create_entry(int key, Request* value) {
   Entry *entry = (Entry *)malloc(sizeof(Entry)); // Cast to Entry pointer type
   entry->key = key;
   entry->value = value;
@@ -36,28 +36,28 @@ Entry* CreateEntry(int key, Request* value) {
   return entry;
 }
 
-void DeleteEntry(Entry* entry) {
+void delete_entry(Entry* entry) {
   free(entry);
 }
 
-void DeleteLinkedList(LinkedList* list) {
+void delete_linked_list(LinkedList* list) {
   Entry* current = list->head;
   while(current != NULL) {
     Entry* next = current->next;
-    DeleteEntry(current);
+    delete_entry(current);
     current = next;
   }
   free(list);
 }
 
-LinkedList* CreateLinkedList() {
+LinkedList* create_linked_list() {
   LinkedList* list = (LinkedList *)malloc(sizeof(LinkedList));
   list->head = NULL;
   list->size = 0;
   return list;
 }
 
-void displayList(LinkedList* list) {
+void display_list(LinkedList* list) {
   Entry* current = list->head;
   while(current != NULL) {
     if(current->next == NULL) {
@@ -69,12 +69,17 @@ void displayList(LinkedList* list) {
   }
 }
 
-Entry* GetNextNode(Entry* entry) {
-  return entry->next;
-}
-
-int insert(LinkedList* list, int key, Request* value) {
-  Entry* entry = CreateEntry(key, value);
+/* 
+ * Program specfic functions:
+ * - set_value
+ * - get_value
+ * - modify_value
+ * - delete_key
+ * - exist
+ * - copy_key
+ */
+int set_value(LinkedList* list, int key, Request* value) {
+  Entry* entry = create_entry(key, value);
 
   if (list->head == NULL) {
     list->head = entry;
@@ -109,11 +114,13 @@ int insert(LinkedList* list, int key, Request* value) {
   return -1;
 }
 
+
+
 int main() {
-  LinkedList* list = CreateLinkedList();
-  insert(list, 4, NULL);
-  insert(list, 2, NULL);
-  insert(list, 3, NULL);
-  displayList(list);
-  DeleteLinkedList(list);
+  LinkedList* list = create_linked_list();
+  set_value(list, 4, NULL);
+  set_value(list, 2, NULL);
+  set_value(list, 3, NULL);
+  display_list(list);
+  delete_linked_list(list);
 }
