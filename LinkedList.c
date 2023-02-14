@@ -149,7 +149,77 @@ int set_value(LinkedList* list, int key, Request* value) {
   return -1;
 }
 
+/**
+  * Get the value of an entry with the given key.
+  * Return -1 in case the key is not found.
+  */
+int get_value(LinkedList* list, int key, Request* value) {
+  Entry* entry = search(list, key);
+  if (entry == NULL) {
+    perror("¡La Key introducida no existe!");
+    return -1;
+  }
+  value = entry->value;
+  return 0;
+}
 
+/**
+  * Modify the value of an entry with the given key.
+  * Return -1 in case the key is not found.
+  */
+int modify_value(LinkedList* list, int key, Request* value) {
+  Entry* entry = search(list, key);
+  if (entry == NULL) {
+    perror("¡La Key introducida no existe!");
+    return -1;
+  }
+  entry->value = value;
+  return 0;
+}
+
+/**
+  * Delete an entry with the given key.
+  * Return -1 in case the key is not found.
+  */
+// int delete_key(LinkedList* list, int key) {
+
+// }
+
+/**
+  * Check if an entry with the given key exists.
+  * Return 1 if the key exists.
+  * Return 0 if the key does not exist.
+  */
+int exist(LinkedList* list, int key) {
+  Entry* entry = search(list, key);
+  if (entry == NULL) {
+    return 0;
+  }
+  return 1;
+}
+
+/**
+  * Copy the value of an entry with the given key.
+  * Return -1 in case the key is not found.
+  */
+ int copy_key(LinkedList* list, int key1, int key2) {
+  Entry* entry1 = search(list, key1);
+  if (entry1 == NULL) {
+    perror("¡La Key que se quiere copiar no existe!");
+    return -1;
+  }
+
+  // If key2 exists, modify its value.
+  // If key2 does not exist, create a new entry with key2 and the value of key1.
+  Entry* entry2 = search(list, key2);
+  if (entry2 == NULL) {
+    set_value(list, key2, entry1->value);
+  } else {
+    entry2->value = entry1->value;
+  }
+  
+  return 0;
+ }
 
 int main() {
   LinkedList* list = create_linked_list();
