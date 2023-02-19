@@ -17,10 +17,11 @@ typedef enum
 
 typedef struct
 {
-    int clave;           // 4 bytes
-    char valor1[256];    // 255 chars + '\0'
-    int valor2;          // 4 bytes
-    double valor3;       // 8 bytes
-    OPERATION operacion; // 0 = init, 1 = set_value, 2 = get_value, 3 = delete_key, 4 = modify_value, 5 = exist, 6 = copy_key
-    int end;             // (default) 0 = false, 1 = true (used to end the loop, not necessary)
+    int clave;             // 4 bytes
+    char valor1[256];      // 255 chars + '\0'
+    int valor2;            // 4 bytes
+    double valor3;         // 8 bytes
+    OPERATION operacion;   // 0 = init, 1 = set_value, 2 = get_value, 3 = delete_key, 4 = modify_value, 5 = exist, 6 = copy_key
+    char clientQueue[256]; // 255 chars + '\0' (identifies the client queue for server to send the response)
+    int end;               // (default) 0 = false, 1 = true (used to end the loop, not necessary)
 } Request;
