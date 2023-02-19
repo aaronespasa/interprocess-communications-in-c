@@ -1,5 +1,5 @@
 /*
- * Receiver
+ * servidor.c file - receiver
  * Authors: 100451339 & 100451170
  */
 
@@ -36,27 +36,38 @@ int main(void)
     // * Request (message)
     Request request;
 
+    printf("\nWaiting for messages...\n\n");
+
     while (1)
     {
-        // * Receive the message
+        // * Receive the message(s)
         mq_receive(
             queue,            // Queue descriptor
             (char *)&request, // Message buffer (cast to char* for POSIX)
             sizeof(Request),  // Message size
             NULL);            // Message priority (not used)
 
+        printf("Received message:\n");
+
         // * Print the message
-        printf("Received: %s (%d)\n", request.text, request.id);
+        printf("Clave: %d | Valor1: %s | Valor2: %d | Valor3: %f | Operacion: %d | End: %s\n",
+               request.clave, request.valor1, request.valor2, request.valor3,
+               request.operacion, request.end ? "true" : "false");
 
         // * Exit condition
-        if (request.id == 0)
+        if (request.end == 1)
         {
-            break;
+            break; // Exit the loop if message id is 0
         }
     }
 
+    printf("\nClosing the queue...\n\n");
+
     // * Close the queue
     mq_close(queue);
+
+    // * Unlink the queue
+    mq_unlink(MQ_NAME); // This prevents for the server to overflow the queue -> errors
 
     return 0;
 }

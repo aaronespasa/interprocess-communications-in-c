@@ -33,10 +33,25 @@ int main(void)
 		S_IRUSR | S_IWUSR,	// User read/write permission
 		&attributes);		// Assign queue attributes
 
+	// ! Messages to be sent
 	// * Request (message) declaration
 	Request request0 = {
-		.id = 1,
-		.text = "Hello world!"}; // Request 0
+		.clave = 0,
+		.valor1 = "Hola",
+		.valor2 = 0,
+		.valor3 = 0.0,
+		.operacion = init,
+		.end = 0 // 0 = false, 1 = true (used to terminate the loop)
+	};
+
+	Request request1 = {
+		.clave = 1,
+		.valor1 = "Mundo",
+		.valor2 = 0,
+		.valor3 = 0.1,
+		.operacion = set_value,
+		.end = 1 // 0 = false, 1 = true (used to terminate the loop)
+	};
 
 	// * Send the message
 	mq_send(
@@ -45,9 +60,16 @@ int main(void)
 		sizeof(Request),   // Message size
 		0);				   // Message priority
 
+	mq_send(
+		queue,			   // Queue descriptor
+		(char *)&request1, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),   // Message size
+		0);				   // Message priority
+
 	// * Close the queue
 	mq_close(queue);
 
 	// * Unlink the queue
-	mq_unlink(MQ_NAME); // Unlink the queue, so it's destroyed
+	// With this, we cannot access the queue anymore nor send multiple times the requests
+	// mq_unlink(MQ_NAME); // Unlink the queue, MQ_QUEUE is removed from the system
 }
