@@ -1,113 +1,99 @@
-/*
- * cliente.c
- * Authors: 100451339 & 100451170
- */
+#include "claves.h"
 
-// ! Libraries declaration
-#include <fcntl.h>	  /* For O_* constants */
-#include <sys/stat.h> /* For mode constants */
-#include <mqueue.h>	  /* For message queue */
+void test_set_value() {
+    int key = 0;
+    char* value1= "Hola mundo";
+    int value2 = 1234;
+    double value3 = 3.1416;
 
-#include <stdio.h>	/* For printf */
-#include <stdlib.h> /* For exit */
+    int ret = set_value(key, value1, value2, value3);
 
-#include "request.h"  /* For request struct */
-#include "response.h" /* For response struct */
+    if (ret == 0) {
+        printf("(set_value): Se guardó el valor (%s, %d, %f) en la clave %d\n", value1, value2, value3, key);
+    } else {
+        printf("(set_value): Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", ret, value1, value2, value3, key);
+    }
+}
 
-#define MQ_SERVER "/mq_server"	 /* Queue name */
-#define MQ_CLIENT "/mq_client_0" /* Queue name */
+void test_get_value() {
+    int key = 0;
+    char* value1 = NULL;
+    int* value2 = NULL;
+    double* value3 = NULL;
 
-// ! Main function
-int main(void)
-{
-	// ! Request
-	// * Attribute declaration - send
-	struct mq_attr serverAttributes = {
-		.mq_flags = 0,				   // Flags (ignored for mq_open())
-		.mq_maxmsg = 10,			   // Max. # of messages on queue
-		.mq_msgsize = sizeof(Request), // Max. message size (bytes)
-		.mq_curmsgs = 0,			   // # of messages currently in queue
-	};
+    int ret = get_value(key, value1, value2, value3);
 
-	// * Create the queue
-	mqd_t serverQueue = mq_open(
-		MQ_SERVER,			// Queue name
-		O_CREAT | O_WRONLY, // Open flags (O_WRONLY for sender)
-		S_IRUSR | S_IWUSR,	// User read/write permission
-		&serverAttributes); // Assign queue attributes
+    if (ret == 0) {
+        printf("(get_value): Se obtuvo el valor (%s, %d, %f) de la clave %d\n", value1, *value2, *value3, key);
+    } else {
+        printf("(get_value): Error (código %d) al obtener el valor de la clave %d\n", ret, key);
+    }
+}
 
-	// ! Response
-	// * Attribute declaration - receive
-	struct mq_attr responseAttributes = {
-		.mq_flags = 0,					// Flags (ignored for mq_open())
-		.mq_maxmsg = 1,					// Max. # of messages on queue (only 1 response)
-		.mq_msgsize = sizeof(Response), // Max. message size (bytes)
-		.mq_curmsgs = 0,				// # of messages currently in queue
-	};
+void test_modify_value() {
+    int key = 0;
+    char* value1 = "Hola jefe";
+    int value2 = 4321;
+    double value3 = 6.2832;
 
-	// * Create the queue
-	mqd_t clientQueue = mq_open(
-		MQ_CLIENT,			  // Queue name
-		O_CREAT | O_RDONLY,	  // Open flags (O_WRONLY for sender)
-		S_IRUSR | S_IWUSR,	  // User read/write permission
-		&responseAttributes); // Assign queue attributes
+    int ret = modify_value(key, value1, value2, value3);
 
-	// ! Send the request
-	// * Request (message) declaration
-	Request request0 = {
-		.clave = 0,
-		.valor1 = "Hola",
-		.valor2 = 0,
-		.valor3 = 0.0,
-		.operacion = init,
-		.clientQueue = MQ_CLIENT,
-		// .end = 0, // 0 = false, 1 = true (used to terminate the loop)
-	};
+    if (ret == 0) {
+        printf("(modify_value): Se modificó la clave %d con el nuevo valor (%s, %d, %f)\n", key, value1, value2, value3);
+    } else {
+        printf("(modify_value): Error (código %d) al modificar la clave %d con el nuevo valor (%s, %d, %f)\n", ret, key, value1, value2, value3);
+    }
+}
 
-	Request request1 = {
-		.clave = 1,
-		.valor1 = "Mundo",
-		.valor2 = 0,
-		.valor3 = 0.1,
-		.operacion = set_value,
-		.clientQueue = MQ_CLIENT,
-		// .end = 0, // 0 = false, 1 = true (used to terminate the loop)
-	};
+void test_delete_key() {
+    int key = 0;
 
-	// * Send the message
-	mq_send(
-		serverQueue,	   // Queue descriptor
-		(char *)&request0, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),   // Message size
-		0);				   // Message priority
+    int ret = delete_key(key);
 
-	mq_send(
-		serverQueue,	   // Queue descriptor
-		(char *)&request1, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),   // Message size
-		0);				   // Message priority
+    if (ret == 0) {
+        printf("(delete_key): Se eliminó la clave %d\n", key);
+    } else {
+        printf("(delete_key): Error (código %d) al eliminar la clave %d\n", ret, key);
+    }
+}
 
-	// ! Receive the response
-	// * Response (message) declaration
-	Response response;
+void test_exist() {
+    int key = 0;
 
-	// * Receive the message
-	mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
+    int ret = exist(key);
 
-	// * Print the response
-	printf("Response: %s\n", response.respuesta);
+    if (ret == 0) {
+        printf("(exist): La clave %d existe\n", key);
+    } else {
+        printf("(exist): La clave %d no existe\n", key);
+    }
+}
 
-	// ! Terminate the queue
-	// * Close the queue
-	mq_close(serverQueue);
-	mq_close(clientQueue);
+void test_copy_key() {
+    int key1 = 0;
+    int key2 = 1;
 
-	// * Unlink the queue
-	// With this, we cannot access the queue anymore nor send multiple times the requests
-	// mq_unlink(MQ_NAME); // Unlink the queue, MQ_QUEUE is removed from the system
-	mq_unlink(MQ_CLIENT); // Unlink the queue, MQ_CLIENT is removed from the system
+    int ret = copy_key(key1, key2);
+
+    if (ret == 0) {
+        printf("(copy_key): La clave %d se copio en la clave %d\n", key1, key2);
+    } else {
+        printf("(copy_key): Error (código %d) al copiar la clave %d en la clave %d\n", ret, key1, key2);
+    }
+}
+
+int main() {
+    if (init() != 0) {
+        printf("Error al conectase con el servidor\n");
+        return -1;
+    }
+
+    test_set_value();
+    test_get_value();
+    test_modify_value();
+    test_delete_key();
+
+    test_set_value();
+    test_exist();
+    test_copy_key();
 }

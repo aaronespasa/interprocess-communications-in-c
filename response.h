@@ -4,5 +4,5 @@
  */
 
 typedef struct {
-    char respuesta[3]; // response to be sent to client
+    int error_code;
 } Response;

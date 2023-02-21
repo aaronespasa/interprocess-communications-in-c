@@ -1,31 +1,30 @@
-BIN_FILES  = p1
-
 CC = gcc
 
-CPPFLAGS = -I$(INSTALL_PATH)/include -Wall
+CPPFLAGS = -I$(INSTALL_PATH)/include -Wall -Wextra -Werror
 
 LDFLAGS = -L$(INSTALL_PATH)/lib/
-#LDLIBS = -lpthread -lm
 
-all: $(BIN_FILES)
-.PHONY : all
+LDLIBS = -lpthread -lrt
+
+all: information cliente 
+
+information:
+	@echo "Output files:"
+	@echo "  - servidor.out"
+	@echo "  - cliente.out (uses libclaves.so)"
 
 # servidor.c compilation
-servidor.out: servidor.c
-	$(CC) $(LDFLAGS) -lrt -o $@ $^ $(LDLIBS)
+servidor: servidor.c
+	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
+
+# Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
+libclaves: claves.c
+	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o $@.so
 
 # Client compilation
-cliente.out: cliente.c
-	$(CC) $(LDFLAGS) -lrt -o $@ $^ $(LDLIBS)
+cliente: cliente.c claves.c
+	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
 
-# Claves compilation
-claves.out: claves.c
-	$(CC) $(LDFLAGS) -lrt -o $@ $^ $(LDLIBS)
-
-# Generate dynamic library
-libclaves.so: libclaves.c
-	$(CC) -shared -fPIC -o $@ $^
-
-%.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
-
+clean:
+	@rm -f *.o *.out *.so
+	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi

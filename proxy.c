@@ -55,23 +55,21 @@ int main(void)
     // ! Send the request
     // * Request (message) declaration
     Request request0 = {
-        .clave = 0,
-        .valor1 = "Hola",
-        .valor2 = 0,
-        .valor3 = 0.0,
+        .key = 0,
+        .value1 = "Hola",
+        .value2 = 0,
+        .value3 = 0.0,
         .operacion = init,
         .clientQueue = MQ_CLIENT,
-        .end = 0, // 0 = false, 1 = true (used to terminate the loop)
     };
 
     Request request1 = {
-        .clave = 1,
-        .valor1 = "Mundo",
-        .valor2 = 0,
-        .valor3 = 0.1,
+        .key = 1,
+        .value1 = "Mundo",
+        .value2 = 0,
+        .value3 = 0.1,
         .operacion = set_value,
         .clientQueue = MQ_CLIENT,
-        .end = 0, // 0 = false, 1 = true (used to terminate the loop)
     };
 
     // * Send the message
@@ -99,7 +97,7 @@ int main(void)
         NULL);             // Message priority (not used)
 
     // * Print the response
-    printf("Response: %s\n", response.respuesta);
+    printf("Response: %s\n", response.error_code);
 
     // ! Terminate the queue
     // * Close the queue
@@ -107,7 +105,7 @@ int main(void)
     mq_close(clientQueue);
 
     // * Unlink the queue
-    // With this, we cannot access the queue anymore nor send multiple times the requests
+    // By doing this, we cannot access the queue anymore nor send multiple times the requests
     // mq_unlink(MQ_NAME); // Unlink the queue, MQ_QUEUE is removed from the system
     mq_unlink(MQ_CLIENT); // Unlink the queue, MQ_CLIENT is removed from the system
 }
