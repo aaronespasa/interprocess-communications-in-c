@@ -54,9 +54,8 @@ int main(void)
         printf("Received message:\n");
 
         // * Print the message
-        printf("Clave: %d | Valor1: %s | Valor2: %d | Valor3: %f | Operacion: %d | End: %s\n",
-               request.clave, request.valor1, request.valor2, request.valor3,
-               request.operacion, request.end ? "true" : "false");
+        printf("Clave: %d | Valor1: %s | Valor2: %d | Valor3: %f | Operacion: %d\n",
+               request.clave, request.valor1, request.valor2, request.valor3, request.operacion);
 
         // ! SEND
         // * Response to the client - ACK
@@ -91,10 +90,10 @@ int main(void)
 
         // ! EXIT CONDITION
         // * Exit condition
-        if (request.end == 1)
-        {
-            break; // Break the loop and finish the program
-        }
+        // if (request.end == 1)
+        // {
+        //     break; // Break the loop and finish the program
+        // }
     }
 
     printf("\nClosing the queue...\n\n");

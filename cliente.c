@@ -1,5 +1,5 @@
 /*
- * Sender
+ * cliente.c
  * Authors: 100451339 & 100451170
  */
 
@@ -61,7 +61,7 @@ int main(void)
 		.valor3 = 0.0,
 		.operacion = init,
 		.clientQueue = MQ_CLIENT,
-		.end = 0, // 0 = false, 1 = true (used to terminate the loop)
+		// .end = 0, // 0 = false, 1 = true (used to terminate the loop)
 	};
 
 	Request request1 = {
@@ -71,7 +71,7 @@ int main(void)
 		.valor3 = 0.1,
 		.operacion = set_value,
 		.clientQueue = MQ_CLIENT,
-		.end = 1, // 0 = false, 1 = true (used to terminate the loop)
+		// .end = 0, // 0 = false, 1 = true (used to terminate the loop)
 	};
 
 	// * Send the message

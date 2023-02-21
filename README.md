@@ -2,8 +2,9 @@
 
 ## Comandos de compilación
 
-- Compilar el servidor: `gcc -o servidor.out servidor.c -lrt && ./servidor.out`
-- Compilar el cliente: `gcc -o cliente.out cliente.c -lrt && ./cliente.out`
+- Compilar el servidor: `make servidor.out && ./servidor.out`
+- Compilar el cliente: `make cliente.out && ./cliente.out`
+
   El -lrt se usa para que el programa pueda usar las funciones de tiempo real.
 - Para mirar la cola de mensajes: `ls /dev/mqueue/`
 - Para leer el contenido de la cola de mensajes: `cat /dev/mqueue/<nombre de la cola>`
@@ -24,3 +25,13 @@ P.D: perdón por usar comentarios bonitos, si no los puedes ver, :sad:
 
 - TODO: estandarizar los comentarios entre los archivos servidor.c y cliente.c
 - TODO: había intentado hacer char i=0; while(i!=-1) y así poder devolver la response  "ACK%d" pero es una movida y habría que importar otras librerías (no sé si se puede), asique lo dejé con while(1).
+
+- TODO: hacer un makefile para compilar todo de una vez
+- TODO: hacer proxy y claves.c
+- TODO: comprobar longitud de la cadena de caracteres
+- TODO: capturar señales control C y ejecutar un unlink de la cola de mensajes
+- TODO: usar pid como nombre de la cola de mensajes visto en clase
+
+# Como ha de ser la estructura?
+
+cliente.c <-> claves.c <-> proxy.c <-> servidor.c
