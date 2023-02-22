@@ -3,11 +3,16 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "servidor.h"
+
+typedef struct EntryRequest {
+  char value1[256];
+  int* value2;
+  double* value3;
+} EntryRequest;
 
 typedef struct Entry {
   int key;
-  Request* value;
+  EntryRequest* value;
   struct Entry *next;
 } Entry;
 
@@ -35,7 +40,7 @@ Entry* search(LinkedList *list, int key) {
 /**
   * Create a new entry with the given key and value.
   */
-Entry* create_entry(int key, Request* value) {
+Entry* create_entry(int key, EntryRequest* value) {
   Entry *entry = (Entry *)malloc(sizeof(Entry)); // Cast to Entry pointer type
   entry->key = key;
   entry->value = value;
@@ -47,6 +52,10 @@ Entry* create_entry(int key, Request* value) {
   * Delete an entry from the linked list.
   */
 void delete_entry(Entry* entry) {
+  free(entry->value->value1);
+  free(entry->value->value2);
+  free(entry->value->value3);
+  free(entry->value);
   free(entry);
 }
 
@@ -77,6 +86,7 @@ LinkedList* create_linked_list() {
   * Display the linked list.
   */
 void display_list(LinkedList* list) {
+  printf("------------ Linked List ------------\n");
   Entry* current = list->head;
   while(current != NULL) {
     if(current->next == NULL) {
@@ -86,6 +96,31 @@ void display_list(LinkedList* list) {
     }
     current = current->next;
   }
+  printf("\nKeys of the linked list:\n");
+
+  current = list->head;
+  while(current != NULL) {
+    // printf("Key: %d, Value: (%s, %d, %f)\n", current->key, current->value->value1, *(current->value->value2), *(current->value->value3));
+    printf("Key: %d\n", current->key);
+    printf("Value1: %s\n", current->value->value1);
+    printf("Value2: %d\n", *(current->value->value2));
+    printf("Value3: %f\n", *(current->value->value3));
+    current = current->next;
+  }
+  printf("-------------------------------------\n");
+}
+
+/**
+  * Check if an entry with the given key exists.
+  * Return 1 if the key exists.
+  * Return 0 if the key does not exist.
+  */
+int exist(LinkedList* list, int key) {
+  Entry* entry = search(list, key);
+  if (entry == NULL) {
+    return 0;
+  }
+  return 1;
 }
 
 /* 
@@ -94,7 +129,7 @@ void display_list(LinkedList* list) {
  * - get_value
  * - modify_value
  * - delete_key
- * - exist
+ * - exist (defined above)
  * - copy_key
  */
 
@@ -103,8 +138,10 @@ void display_list(LinkedList* list) {
   * Returns 0 if the insertion was successful.
   * Returns -1 if the insertion failed.
   */
-int set_value(LinkedList* list, int key, Request* value) {
+int set_value(LinkedList* list, int key, EntryRequest* value) {
   Entry* entry = create_entry(key, value);
+
+  if(exist(list, key) == 1) return -1;
 
   // If the list is empty, insert the entry at the head.
   if (list->head == NULL) {
@@ -153,13 +190,15 @@ int set_value(LinkedList* list, int key, Request* value) {
   * Get the value of an entry with the given key.
   * Return -1 in case the key is not found.
   */
-int get_value(LinkedList* list, int key, Request* value) {
+int get_value(LinkedList* list, int key, EntryRequest* value) {
   Entry* entry = search(list, key);
   if (entry == NULL) {
     perror("¡La Key introducida no existe!");
     return -1;
   }
-  value = entry->value;
+  strcpy(value->value1, entry->value->value1);
+  value->value2 = entry->value->value2;
+  value->value3 = entry->value->value3;
   return 0;
 }
 
@@ -167,7 +206,7 @@ int get_value(LinkedList* list, int key, Request* value) {
   * Modify the value of an entry with the given key.
   * Return -1 in case the key is not found.
   */
-int modify_value(LinkedList* list, int key, Request* value) {
+int modify_value(LinkedList* list, int key, EntryRequest* value) {
   Entry* entry = search(list, key);
   if (entry == NULL) {
     perror("¡La Key introducida no existe!");
@@ -214,19 +253,6 @@ int delete_key(LinkedList* list, int key) {
 }
 
 /**
-  * Check if an entry with the given key exists.
-  * Return 1 if the key exists.
-  * Return 0 if the key does not exist.
-  */
-int exist(LinkedList* list, int key) {
-  Entry* entry = search(list, key);
-  if (entry == NULL) {
-    return 0;
-  }
-  return 1;
-}
-
-/**
   * Copy the value of an entry with the given key.
   * Return -1 in case the key is not found.
   */
@@ -249,12 +275,12 @@ int exist(LinkedList* list, int key) {
   return 0;
  }
 
-int main() {
-  LinkedList* list = create_linked_list();
-  set_value(list, 4, NULL);
-  set_value(list, 2, NULL);
-  set_value(list, 3, NULL);
-  delete_key(list, 4);
-  display_list(list);
-  delete_linked_list(list);
-}
+// int main() {
+//   LinkedList* list = create_linked_list();
+//   set_value(list, 4, NULL);
+//   set_value(list, 2, NULL);
+//   set_value(list, 3, NULL);
+//   delete_key(list, 4);
+//   display_list(list);
+//   delete_linked_list(list);
+// }

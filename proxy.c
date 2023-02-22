@@ -1,5 +1,5 @@
 /*
- * proxy.c
+ * proxy.c file - receiver
  * Authors: 100451339 & 100451170
  */
 
@@ -10,102 +10,141 @@
 
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For exit */
+#include <signal.h>
 
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
 
-#define MQ_SERVER "/mq_server"   /* Queue name */
-#define MQ_CLIENT "/mq_client_0" /* Queue name */
+#include "servidor.c"
+
+#define MQ_SERVER "/mq_server" /* Queue name */
+
+LinkedList *list;
+
+mqd_t serverQueue;
+mqd_t clientQueue;
+
+// ! Request (Attribute declaration - send)
+struct mq_attr serverAttributes = {
+	.mq_flags = 0,				   // Flags (ignored for mq_open())
+	.mq_maxmsg = 10,			   // Max. # of messages on queue
+	.mq_msgsize = sizeof(Request), // Max. message size (bytes)
+	.mq_curmsgs = 0,			   // # of messages currently in queue
+};
+
+// ! Response (Attribute declaration - receive)
+struct mq_attr clientAttributes = {
+	.mq_flags = 0,					// Flags (ignored for mq_open())
+	.mq_maxmsg = 1,					// Max. # of messages on queue (only 1 response)
+	.mq_msgsize = sizeof(Response), // Max. message size (bytes)
+	.mq_curmsgs = 0,				// # of messages currently in queue
+};
+
+// We use a signal handler to stop the server, forced to declare and use signum to avoid warnings
+void stopServer(int signum) {
+    printf("\nClosing the queue...\n\n");
+
+    // * Close the queue
+    mq_close(serverQueue);
+
+    // * Unlink the queue
+    mq_unlink(MQ_SERVER);
+
+    delete_linked_list(list);
+
+    exit(signum);
+}
 
 // ! Main function
-int main(void)
-{
-    // ! Request
-    // * Attribute declaration - send
-    struct mq_attr serverAttributes = {
-        .mq_flags = 0,                 // Flags (ignored for mq_open())
-        .mq_maxmsg = 10,               // Max. # of messages on queue
-        .mq_msgsize = sizeof(Request), // Max. message size (bytes)
-        .mq_curmsgs = 0,               // # of messages currently in queue
-    };
+int main(void) {
+    list = create_linked_list();
+    int error_code = -1;
 
-    // * Create the queue
-    mqd_t serverQueue = mq_open(
+    // * Open the queue
+    serverQueue = mq_open(
         MQ_SERVER,          // Queue name
-        O_CREAT | O_WRONLY, // Open flags (O_WRONLY for sender)
+        O_CREAT | O_RDONLY, // Open flags (O_RDONLY for receiver)
         S_IRUSR | S_IWUSR,  // User read/write permission
         &serverAttributes); // Assign queue attributes
 
-    // ! Response
-    // * Attribute declaration - receive
-    struct mq_attr responseAttributes = {
-        .mq_flags = 0,                  // Flags (ignored for mq_open())
-        .mq_maxmsg = 1,                 // Max. # of messages on queue (only 1 response)
-        .mq_msgsize = sizeof(Response), // Max. message size (bytes)
-        .mq_curmsgs = 0,                // # of messages currently in queue
-    };
+    printf("\nWaiting for messages...\n\n");
 
-    // * Create the queue
-    mqd_t clientQueue = mq_open(
-        MQ_CLIENT,            // Queue name
-        O_CREAT | O_RDONLY,   // Open flags (O_WRONLY for sender)
-        S_IRUSR | S_IWUSR,    // User read/write permission
-        &responseAttributes); // Assign queue attributes
+    signal(SIGINT, stopServer);
 
-    // ! Send the request
-    // * Request (message) declaration
-    Request request0 = {
-        .key = 0,
-        .value1 = "Hola",
-        .value2 = 0,
-        .value3 = 0.0,
-        .operacion = init,
-        .clientQueue = MQ_CLIENT,
-    };
+    // TODO: Done with an iterator i instead of while(1) so we can have a counter on the number
+    // of messages sent/set of messages received and so we dont have to force break the loop
+    while (1) {
+        // * Request (message)
+        Request request;
 
-    Request request1 = {
-        .key = 1,
-        .value1 = "Mundo",
-        .value2 = 0,
-        .value3 = 0.1,
-        .operacion = set_value,
-        .clientQueue = MQ_CLIENT,
-    };
+        // * Receive the message
+        mq_receive(
+            serverQueue,      // Queue descriptor
+            (char *)&request, // Message buffer (cast to char* for POSIX)
+            sizeof(Request),  // Message size
+            NULL);            // Message priority (not used)
 
-    // * Send the message
-    mq_send(
-        serverQueue,       // Queue descriptor
-        (char *)&request0, // Message buffer (cast to char* for POSIX)
-        sizeof(Request),   // Message size
-        0);                // Message priority
+        printf("Message received!\n");
 
-    mq_send(
-        serverQueue,       // Queue descriptor
-        (char *)&request1, // Message buffer (cast to char* for POSIX)
-        sizeof(Request),   // Message size
-        0);                // Message priority
+        // * Response (message)
+        Response response;
 
-    // ! Receive the response
-    // * Response (message) declaration
-    Response response;
+        switch(request.operacion) {
+            case set_value_op:
+                error_code = list_set_value(request.key1, request.value1, request.value2, request.value3, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+            case get_value_op:
+                error_code = list_get_value(request.key1, request.value1, request.value2ptr, request.value3ptr, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+            case delete_key_op:
+                error_code = list_delete_key(request.key1, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+            case modify_value_op:
+                error_code = list_modify_value(request.key1, request.value1, request.value2, request.value3, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+            case exist_op:
+                error_code = list_exist(request.key1, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+            case copy_key_op:
+                error_code = list_copy_key(request.key1, request.key2, list);
+                response.error_code = error_code;
+                list_display_list(list);
+                break;
+        }
 
-    // * Receive the message
-    mq_receive(
-        clientQueue,       // Queue descriptor
-        (char *)&response, // Message buffer (cast to char* for POSIX)
-        sizeof(Response),  // Message size
-        NULL);             // Message priority (not used)
+        printf("Response created\n");
 
-    // * Print the response
-    printf("Response: %s\n", response.error_code);
+        // * Open the queue
+        clientQueue = mq_open(
+            "/mq_client_1",      // Queue name (received from client)
+            O_CREAT | O_WRONLY,  // Open flags (O_RDONLY for receiver)
+            S_IRUSR | S_IWUSR,   // User read/write permission
+            &clientAttributes);  // Assign queue attributes
 
-    // ! Terminate the queue
-    // * Close the queue
-    mq_close(serverQueue);
-    mq_close(clientQueue);
+        printf("Queue opened");
 
-    // * Unlink the queue
-    // By doing this, we cannot access the queue anymore nor send multiple times the requests
-    // mq_unlink(MQ_NAME); // Unlink the queue, MQ_QUEUE is removed from the system
-    mq_unlink(MQ_CLIENT); // Unlink the queue, MQ_CLIENT is removed from the system
+        // * Send the message
+        mq_send(
+            clientQueue,       // Queue descriptor
+            (char *)&response, // Message buffer (cast to char* for POSIX)
+            sizeof(Response),  // Message size
+            0);                // Message priority (not used)
+
+        printf("Message sent");
+
+        // * Close the queue - free resources
+        mq_close(clientQueue);
+    }
+
+    return 0;
 }

@@ -6,15 +6,15 @@ LDFLAGS = -L$(INSTALL_PATH)/lib/
 
 LDLIBS = -lpthread -lrt
 
-all: information cliente 
+all: information cliente proxy
 
 information:
 	@echo "Output files:"
-	@echo "  - servidor.out"
+	@echo "  - proxy.out"
 	@echo "  - cliente.out (uses libclaves.so)"
 
-# servidor.c compilation
-servidor: servidor.c
+# proxy.c compilation
+proxy: proxy.c
 	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
 
 # Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
@@ -28,3 +28,4 @@ cliente: cliente.c claves.c
 clean:
 	@rm -f *.o *.out *.so
 	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi
+	@echo "All files removed"

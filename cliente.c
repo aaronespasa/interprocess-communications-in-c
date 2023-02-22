@@ -2,7 +2,7 @@
 
 void test_set_value() {
     int key = 0;
-    char* value1= "Hola mundo";
+    char value1[256]= "Hola mundo";
     int value2 = 1234;
     double value3 = 3.1416;
 
@@ -17,7 +17,7 @@ void test_set_value() {
 
 void test_get_value() {
     int key = 0;
-    char* value1 = NULL;
+    char value1[256] = "";
     int* value2 = NULL;
     double* value3 = NULL;
 
@@ -32,7 +32,7 @@ void test_get_value() {
 
 void test_modify_value() {
     int key = 0;
-    char* value1 = "Hola jefe";
+    char value1[256] = "Hola jefe";
     int value2 = 4321;
     double value3 = 6.2832;
 
@@ -90,10 +90,13 @@ int main() {
 
     test_set_value();
     test_get_value();
-    test_modify_value();
-    test_delete_key();
+    // test_modify_value();
+    // test_delete_key();
 
-    test_set_value();
-    test_exist();
-    test_copy_key();
+    // test_set_value();
+    // test_exist();
+    // test_copy_key();
+    close_queue();
+
+    return 0;
 }

@@ -76,4 +76,6 @@ int exist(int key);
  */
 int copy_key(int key1, int key2);
 
+int close_queue();
+
 #endif
