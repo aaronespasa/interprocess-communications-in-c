@@ -24,6 +24,9 @@ void test_get_value() {
     int ret = get_value(key, value1, value2, value3);
 
     if (ret == 0) {
+        printf("Value1: %s\n", value1);
+        printf("Value2: %d\n", *value2);
+        printf("Value3: %f\n", *value3);
         printf("(get_value): Se obtuvo el valor (%s, %d, %f) de la clave %d\n", value1, *value2, *value3, key);
     } else {
         printf("(get_value): Error (código %d) al obtener el valor de la clave %d\n", ret, key);

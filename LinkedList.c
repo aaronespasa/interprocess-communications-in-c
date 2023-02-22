@@ -190,15 +190,16 @@ int set_value(LinkedList* list, int key, EntryRequest* value) {
   * Get the value of an entry with the given key.
   * Return -1 in case the key is not found.
   */
-int get_value(LinkedList* list, int key, EntryRequest* value) {
+int get_value(LinkedList* list, int key, char *value1, int* value2, double* value3) {
   Entry* entry = search(list, key);
   if (entry == NULL) {
     perror("¡La Key introducida no existe!");
     return -1;
   }
-  strcpy(value->value1, entry->value->value1);
-  value->value2 = entry->value->value2;
-  value->value3 = entry->value->value3;
+  strcpy(value1, entry->value->value1);
+  *value2 = *(entry->value->value2);
+  *value3 = *(entry->value->value3);
+
   return 0;
 }
 
