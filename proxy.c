@@ -11,6 +11,7 @@
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For exit */
 #include <signal.h>
+#include <string.h>
 
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
@@ -26,22 +27,23 @@ mqd_t clientQueue;
 
 // ! Request (Attribute declaration - send)
 struct mq_attr serverAttributes = {
-	.mq_flags = 0,				   // Flags (ignored for mq_open())
-	.mq_maxmsg = 10,			   // Max. # of messages on queue
-	.mq_msgsize = sizeof(Request), // Max. message size (bytes)
-	.mq_curmsgs = 0,			   // # of messages currently in queue
+    .mq_flags = 0,                 // Flags (ignored for mq_open())
+    .mq_maxmsg = 10,               // Max. # of messages on queue
+    .mq_msgsize = sizeof(Request), // Max. message size (bytes)
+    .mq_curmsgs = 0,               // # of messages currently in queue
 };
 
 // ! Response (Attribute declaration - receive)
 struct mq_attr clientAttributes = {
-	.mq_flags = 0,					// Flags (ignored for mq_open())
-	.mq_maxmsg = 1,					// Max. # of messages on queue (only 1 response)
-	.mq_msgsize = sizeof(Response), // Max. message size (bytes)
-	.mq_curmsgs = 0,				// # of messages currently in queue
+    .mq_flags = 0,                  // Flags (ignored for mq_open())
+    .mq_maxmsg = 1,                 // Max. # of messages on queue (only 1 response)
+    .mq_msgsize = sizeof(Response), // Max. message size (bytes)
+    .mq_curmsgs = 0,                // # of messages currently in queue
 };
 
 // We use a signal handler to stop the server, forced to declare and use signum to avoid warnings
-void stopServer(int signum) {
+void stopServer(int signum)
+{
     printf("\nClosing the queue...\n\n");
 
     // * Close the queue
@@ -56,7 +58,8 @@ void stopServer(int signum) {
 }
 
 // ! Main function
-int main(void) {
+int main(void)
+{
     list = create_linked_list();
     int error_code = -1;
 
@@ -73,7 +76,8 @@ int main(void) {
 
     // TODO: Done with an iterator i instead of while(1) so we can have a counter on the number
     // of messages sent/set of messages received and so we dont have to force break the loop
-    while (1) {
+    while (1)
+    {
         // * Request (message)
         Request request;
 
@@ -89,47 +93,60 @@ int main(void) {
         // * Response (message)
         Response response;
 
-        switch(request.operacion) {
-            case set_value_op:
-                error_code = list_set_value(request.key1, request.value1, request.value2, request.value3, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
-            case get_value_op:
-                error_code = list_get_value(request.key1, request.value1, request.value2ptr, request.value3ptr, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
-            case delete_key_op:
-                error_code = list_delete_key(request.key1, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
-            case modify_value_op:
-                error_code = list_modify_value(request.key1, request.value1, request.value2, request.value3, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
-            case exist_op:
-                error_code = list_exist(request.key1, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
-            case copy_key_op:
-                error_code = list_copy_key(request.key1, request.key2, list);
-                response.error_code = error_code;
-                list_display_list(list);
-                break;
+        switch (request.operacion)
+        {
+        case set_value_op:
+            error_code = list_set_value(request.key1, request.value1, request.value2, request.value3, list);
+            response.error_code = error_code;
+            list_display_list(list);
+            break;
+        case get_value_op:
+            char value1response[256] = "";
+            int* value2response = malloc(sizeof(int));
+            int* value3response = malloc(sizeof(int));
+
+            error_code = list_get_value(request.key1, value1response, value2response, value3response, list);
+            
+            response.error_code = error_code;
+            strcpy(response.value1, value1response);
+            response.value2 = *value2response;
+            response.value3 = *value3response;
+
+            free(value2response);
+            free(value3response);
+            
+            list_display_list(list);
+            break;
+        case delete_key_op:
+            error_code = list_delete_key(request.key1, list);
+            response.error_code = error_code;
+            list_display_list(list);
+            break;
+        case modify_value_op:
+            error_code = list_modify_value(request.key1, request.value1, request.value2, request.value3, list);
+            response.error_code = error_code;
+            list_display_list(list);
+            break;
+        case exist_op:
+            error_code = list_exist(request.key1, list);
+            response.error_code = error_code;
+            list_display_list(list);
+            break;
+        case copy_key_op:
+            error_code = list_copy_key(request.key1, request.key2, list);
+            response.error_code = error_code;
+            list_display_list(list);
+            break;
         }
 
         printf("Response created\n");
 
         // * Open the queue
         clientQueue = mq_open(
-            "/mq_client_1",      // Queue name (received from client)
-            O_CREAT | O_WRONLY,  // Open flags (O_RDONLY for receiver)
-            S_IRUSR | S_IWUSR,   // User read/write permission
-            &clientAttributes);  // Assign queue attributes
+            "/mq_client_1",     // Queue name (received from client)
+            O_CREAT | O_WRONLY, // Open flags (O_RDONLY for receiver)
+            S_IRUSR | S_IWUSR,  // User read/write permission
+            &clientAttributes); // Assign queue attributes
 
         printf("Queue opened");
 

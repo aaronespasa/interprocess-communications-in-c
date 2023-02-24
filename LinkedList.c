@@ -4,15 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct EntryRequest {
-  char value1[256];
-  int* value2;
-  double* value3;
-} EntryRequest;
-
 typedef struct Entry {
   int key;
-  EntryRequest* value;
+  char value1[256];
+  int value2;
+  double value3;
   struct Entry *next;
 } Entry;
 
@@ -40,10 +36,12 @@ Entry* search(LinkedList *list, int key) {
 /**
   * Create a new entry with the given key and value.
   */
-Entry* create_entry(int key, EntryRequest* value) {
+Entry* create_entry(int key, char *value1, int value2, double value3) {
   Entry *entry = (Entry *)malloc(sizeof(Entry)); // Cast to Entry pointer type
   entry->key = key;
-  entry->value = value;
+  strcpy(entry->value1, value1);
+  entry->value2 = value2;
+  entry->value3 = value3;
   entry->next = NULL;
   return entry;
 }
@@ -52,10 +50,6 @@ Entry* create_entry(int key, EntryRequest* value) {
   * Delete an entry from the linked list.
   */
 void delete_entry(Entry* entry) {
-  free(entry->value->value1);
-  free(entry->value->value2);
-  free(entry->value->value3);
-  free(entry->value);
   free(entry);
 }
 
@@ -102,9 +96,9 @@ void display_list(LinkedList* list) {
   while(current != NULL) {
     // printf("Key: %d, Value: (%s, %d, %f)\n", current->key, current->value->value1, *(current->value->value2), *(current->value->value3));
     printf("Key: %d\n", current->key);
-    printf("Value1: %s\n", current->value->value1);
-    printf("Value2: %d\n", *(current->value->value2));
-    printf("Value3: %f\n", *(current->value->value3));
+    printf("Value1: %s\n", current->value1);
+    printf("Value2: %d\n", current->value2);
+    printf("Value3: %f\n", current->value3);
     current = current->next;
   }
   printf("-------------------------------------\n");
@@ -138,8 +132,8 @@ int exist(LinkedList* list, int key) {
   * Returns 0 if the insertion was successful.
   * Returns -1 if the insertion failed.
   */
-int set_value(LinkedList* list, int key, EntryRequest* value) {
-  Entry* entry = create_entry(key, value);
+int set_value(LinkedList* list, int key, char *value1, int value2, double value3) {
+  Entry* entry = create_entry(key, value1, value2, value3);
 
   if(exist(list, key) == 1) return -1;
 
@@ -196,10 +190,9 @@ int get_value(LinkedList* list, int key, char *value1, int* value2, double* valu
     perror("¡La Key introducida no existe!");
     return -1;
   }
-  strcpy(value1, entry->value->value1);
-  *value2 = *(entry->value->value2);
-  *value3 = *(entry->value->value3);
-
+  strcpy(value1, entry->value1);
+  *value2 = entry->value2;
+  *value3 = entry->value3;
   return 0;
 }
 

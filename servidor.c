@@ -13,14 +13,8 @@
  * Insert the element <value1, value2, value3> with key <key>
  */
 int list_set_value(int key, char *value1, int value2, double value3, LinkedList* list) {
-    // create request
-    EntryRequest* request = (EntryRequest *)malloc(sizeof(EntryRequest));
-    strcpy(request->value1, value1);
-    request->value2 = &value2;
-    request->value3 = &value3;
-
     // insert request in the linked list
-    int error_code = set_value(list, key, request);
+    int error_code = set_value(list, key, value1, value2, value3);
 
     return error_code;
 }

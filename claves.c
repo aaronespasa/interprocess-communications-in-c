@@ -74,10 +74,6 @@ int set_value(int key, char *value1, int value2, double value3) {
 	strcpy(request.value1, value1);
 	strcpy(request.clientQueue, MQ_CLIENT);
 
-
-	// request.value1 = (char *)malloc(sizeof(strlen(value1)));
-	// strcpy(request.value1, value1);
-
 	// * Send the request to assign the value
 	int send_request = mq_send(
 		serverQueue,	  // Queue descriptor
@@ -110,9 +106,9 @@ int get_value(int key, char *value1, int *value2, double *value3) {
 	// ! Send the request (Request (message) declaration)
 	Request request = {
 		.key1 = key,
-		.value2ptr = value2,
-		.value3ptr = value3,
-		.operacion = get_value_op,
+		.value2 = *value2,
+		.value3 = *value3,
+		.operacion = get_value_op
 	};
 
 	strcpy(request.value1, value1);
@@ -137,6 +133,10 @@ int get_value(int key, char *value1, int *value2, double *value3) {
 		NULL);			   // Message priority (not used)
 	
 	if(receive_response == -1) return -1; // return -1 if the message was not received
+
+	strcpy(value1, response.value1);
+	*value2 = response.value2;
+	*value3 = response.value3;
 
 	return response.error_code;
 }
