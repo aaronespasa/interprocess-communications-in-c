@@ -12,6 +12,7 @@ information:
 	@echo "Output files:"
 	@echo "  - proxy.out"
 	@echo "  - cliente.out (uses libclaves.so)"
+	@echo -e '\n'
 
 # proxy.c compilation
 proxy: proxy.c
@@ -28,4 +29,4 @@ cliente: cliente.c claves.c
 clean:
 	@rm -f *.o *.out *.so
 	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi
-	@echo "All files removed"
+	@echo -e "All files removed"'\n'

@@ -42,14 +42,15 @@ struct mq_attr clientAttributes = {
 };
 
 // We use a signal handler to stop the server, forced to declare and use signum to avoid warnings
+// ! Signal handler
 void stopServer(int signum)
 {
     printf("\nClosing the queue...\n\n");
 
-    // * Close the queue
+    // Close the queue
     mq_close(serverQueue);
 
-    // * Unlink the queue
+    // Unlink the queue
     mq_unlink(MQ_SERVER);
 
     delete_linked_list(list);
@@ -72,6 +73,7 @@ int main(void)
 
     printf("\nWaiting for messages...\n\n");
 
+    // If signal is received, stop the server
     signal(SIGINT, stopServer);
 
     // TODO: Done with an iterator i instead of while(1) so we can have a counter on the number
@@ -79,64 +81,69 @@ int main(void)
     while (1)
     {
         // * Request (message)
-        Request request;
+        Request client_request;
 
         // * Receive the message
         mq_receive(
-            serverQueue,      // Queue descriptor
-            (char *)&request, // Message buffer (cast to char* for POSIX)
-            sizeof(Request),  // Message size
-            NULL);            // Message priority (not used)
+            serverQueue,             // Queue descriptor
+            (char *)&client_request, // Message buffer (cast to char* for POSIX)
+            sizeof(Request),         // Message size
+            NULL);                   // Message priority (not used)
 
         printf("Message received!\n");
 
         // * Response (message)
-        Response response;
+        Response server_response;
 
-        switch (request.operacion)
+        switch (client_request.operacion)
         {
         case set_value_op:
-            error_code = list_set_value(request.key1, request.value1, request.value2, request.value3, list);
-            response.error_code = error_code;
+            error_code = list_set_value(client_request.key1, client_request.value1, client_request.value2, client_request.value3, list);
+            server_response.error_code = error_code;
             list_display_list(list);
             break;
-        case get_value_op:
-            char value1response[256] = "";
-            int* value2response = malloc(sizeof(int));
-            int* value3response = malloc(sizeof(int));
 
-            error_code = list_get_value(request.key1, value1response, value2response, value3response, list);
-            
-            response.error_code = error_code;
-            strcpy(response.value1, value1response);
-            response.value2 = *value2response;
-            response.value3 = *value3response;
+        // case get_value_op:
+        //     char value1response[256] = "";
+        //     int *value2response = malloc(sizeof(int));
+        //     int *value3response = malloc(sizeof(int));
 
-            free(value2response);
-            free(value3response);
-            
-            list_display_list(list);
-            break;
-        case delete_key_op:
-            error_code = list_delete_key(request.key1, list);
-            response.error_code = error_code;
-            list_display_list(list);
-            break;
-        case modify_value_op:
-            error_code = list_modify_value(request.key1, request.value1, request.value2, request.value3, list);
-            response.error_code = error_code;
-            list_display_list(list);
-            break;
-        case exist_op:
-            error_code = list_exist(request.key1, list);
-            response.error_code = error_code;
-            list_display_list(list);
-            break;
-        case copy_key_op:
-            error_code = list_copy_key(request.key1, request.key2, list);
-            response.error_code = error_code;
-            list_display_list(list);
-            break;
+        //     error_code = list_get_value(client_request.key1, value1response, value2response, value3response, list);
+
+        //     server_response.error_code = error_code;
+        //     strcpy(server_response.value1, value1response);
+        //     server_response.value2 = *value2response;
+        //     server_response.value3 = *value3response;
+
+        //     free(value2response);
+        //     free(value3response);
+
+        //     list_display_list(list);
+        //     break;
+
+        // case delete_key_op:
+        //     error_code = list_delete_key(client_request.key1, list);
+        //     server_response.error_code = error_code;
+        //     list_display_list(list);
+        //     break;
+
+        // case modify_value_op:
+        //     error_code = list_modify_value(client_request.key1, client_request.value1, client_request.value2, client_request.value3, list);
+        //     server_response.error_code = error_code;
+        //     list_display_list(list);
+        //     break;
+
+        // case exist_op:
+        //     error_code = list_exist(client_request.key1, list);
+        //     server_response.error_code = error_code;
+        //     list_display_list(list);
+        //     break;
+
+        // case copy_key_op:
+        //     error_code = list_copy_key(client_request.key1, client_request.key2, list);
+        //     server_response.error_code = error_code;
+        //     list_display_list(list);
+        //     break;
         }
 
         printf("Response created\n");
@@ -152,10 +159,10 @@ int main(void)
 
         // * Send the message
         mq_send(
-            clientQueue,       // Queue descriptor
-            (char *)&response, // Message buffer (cast to char* for POSIX)
-            sizeof(Response),  // Message size
-            0);                // Message priority (not used)
+            clientQueue,              // Queue descriptor
+            (char *)&server_response, // Message buffer (cast to char* for POSIX)
+            sizeof(Response),         // Message size
+            0);                       // Message priority (not used)
 
         printf("Message sent");
 

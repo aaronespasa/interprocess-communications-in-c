@@ -24,15 +24,24 @@ struct mq_attr responseAttributes = {
 	.mq_curmsgs = 0,				// # of messages currently in queue
 };
 
-void get_mq_client_name(char* MQ_CLIENT) {
+// getpid() returns the process ID of the calling process
+// sprintf(qr_name, "/CLIENT_%d", getpid()); // qr_name = "/CLIENT_1234"
+// /CLIENT_{getpid()} is the name of the queue
+void get_mq_client_name(char *MQ_CLIENT)
+{
 	sprintf(MQ_CLIENT, "/mq_client_%d", getpid());
 }
 
-// getpid() returns the process ID of the calling process
-// /CLIENT_{getpid()} is the name of the queue
-// sprintf(qr_name, "/CLIENT_%d", getpid()); // qr_name = "/CLIENT_1234"
+int value1_length(char *value)
+{
+	// Check if len of value 1 is more than 256 chars
+	if (strlen(value) > 256)
+		return -1;
+	return 0;
+}
 
-int init() {
+int init()
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
@@ -42,8 +51,9 @@ int init() {
 		O_CREAT | O_WRONLY, // Open flags (O_WRONLY for sender)
 		S_IRUSR | S_IWUSR,	// User read/write permission
 		&serverAttributes); // Assign queue attributes
-		
-	if (serverQueue == -1) return -1; // return -1 if the queue was not created
+
+	if (serverQueue == -1)
+		return -1; // return -1 if the queue was not created
 
 	// * Create the queue
 	clientQueue = mq_open(
@@ -51,259 +61,296 @@ int init() {
 		O_CREAT | O_RDONLY,	  // Open flags (O_WRONLY for sender)
 		S_IRUSR | S_IWUSR,	  // User read/write permission
 		&responseAttributes); // Assign queue attributes
-	
-	if (clientQueue == -1) return -1; // return -1 if the queue was not created
+
+	if (clientQueue == -1)
+		return -1; // return -1 if the queue was not created
 
 	return 0;
 }
 
-int set_value(int key, char *value1, int value2, double value3) {
+int set_value(int key, char *value1, int value2, double value3)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
-	if(strlen(value1) > 256) return -1;
+	if (value1_length(value1) == -1)
+		return -1;
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key,
+		.value1 = *value1,
 		.value2 = value2,
 		.value3 = value3,
 		.operacion = set_value_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.value1, value1);
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(request.value1, value1);
+	// strcpy(request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to assign the value
 	int send_request = mq_send(
-		serverQueue,	  // Queue descriptor
-		(char *)&request, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),  // Message size
-		0);				  // Message priority
-	
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size as the created request
+		0);						 // Message priority
 
-	Response response;
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
+
+	Response server_response;
 
 	// * Receive the response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	return response.error_code;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+
+	return server_response.error_code;
 }
 
-int get_value(int key, char *value1, int *value2, double *value3) {
+int get_value(int key, char *value1, int *value2, double *value3)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
-	if(strlen(value1) > 256) return -1;
+	// Check if the received value is bigger than 256 -> return -1
+	if (value1_length(value1) == -1)
+		return -1;
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key,
+		.value1 = *value1,
 		.value2 = *value2,
 		.value3 = *value3,
-		.operacion = get_value_op
+		.operacion = get_value_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.value1, value1);
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(request.value1, value1);
+	// strcpy(request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to get the value
 	int send_request = mq_send(
-		serverQueue,		// Queue descriptor
-		(char *)&request,	// Message buffer (cast to char* for POSIX)
-		sizeof(Request), 	// Message size
-		0);					// Message priority
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size
+		0);						 // Message priority
 
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
 
-	Response response;
+	Response server_response;
 
 	// * Receive the response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	strcpy(value1, response.value1);
-	*value2 = response.value2;
-	*value3 = response.value3;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
 
-	return response.error_code;
+	// strcpy(value1, server_response.value1);
+	// *value2 = response.value2;
+	// *value3 = response.value3;
+
+	return server_response.error_code;
 }
 
-int modify_value(int key, char *value1, int value2, double value3) {
+int modify_value(int key, char *value1, int value2, double value3)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
-	if(strlen(value1) > 256) return -1;
+	// Si value1_length devuelve -1 -> return -1
+	if (value1_length(value1) == -1)
+		return -1;
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key,
+		.value1 = *value1,
 		.value2 = value2,
 		.value3 = value3,
 		.operacion = modify_value_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.value1, value1);
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(request.value1, value1);
+	// strcpy(request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to modify the value
 	int send_request = mq_send(
-		serverQueue,	  // Queue descriptor
-		(char *)&request, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),  // Message size
-		0);				  // Message priority
-	
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size
+		0);						 // Message priority
 
-	Response response;
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
+
+	Response server_response;
 
 	// * Receive the response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	return response.error_code;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+
+	return server_response.error_code;
 }
 
-int delete_key(int key) {
+int delete_key(int key)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key,
 		.operacion = delete_key_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to delete the key
 	int send_request = mq_send(
-		serverQueue,	  // Queue descriptor
-		(char *)&request, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),  // Message size
-		0);				  // Message priority
-	
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size
+		0);						 // Message priority
 
-	Response response;
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
 
-	// * Receive the response
+	Response server_response;
+
+	// * Receive the server_response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	return response.error_code;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+
+	return server_response.error_code;
 }
 
-int exist(int key) {
+int exist(int key)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key,
 		.operacion = exist_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to check if the key exists
 	int send_request = mq_send(
-		serverQueue,	  // Queue descriptor
-		(char *)&request, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),  // Message size
-		0);				  // Message priority
-	
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size
+		0);						 // Message priority
 
-	Response response;
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
 
-	// * Receive the response
+	Response server_response;
+
+	// * Receive the server_response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	return response.error_code;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+
+	return server_response.error_code;
 }
 
-int copy_key(int key1, int key2) {
+int copy_key(int key1, int key2)
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
 	// ! Send the request (Request (message) declaration)
-	Request request = {
+	Request client_request = {
 		.key1 = key1,
 		.key2 = key2,
 		.operacion = copy_key_op,
+		.clientQueue = *MQ_CLIENT,
 	};
 
-	strcpy(request.clientQueue, MQ_CLIENT);
+	// strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to copy the key
 	int send_request = mq_send(
-		serverQueue,	  // Queue descriptor
-		(char *)&request, // Message buffer (cast to char* for POSIX)
-		sizeof(Request),  // Message size
-		0);				  // Message priority
-	
-	if(send_request == -1) return -1; // return -1 if the message was not sent
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size
+		0);						 // Message priority
 
-	Response response;
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
 
-	// * Receive the response
+	Response server_response;
+
+	// * Receive the server_response
 	int receive_response = mq_receive(
-		clientQueue,	   // Queue descriptor
-		(char *)&response, // Message buffer (cast to char* for POSIX)
-		sizeof(Response),  // Message size
-		NULL);			   // Message priority (not used)
-	
-	if(receive_response == -1) return -1; // return -1 if the message was not received
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size
+		NULL);					  // Message priority (not used)
 
-	return response.error_code;
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+
+	return server_response.error_code;
 }
 
-int close_queue() {
+int close_queue()
+{
 	// char MQ_CLIENT[32]; get_mq_client_name(MQ_CLIENT);
 	char MQ_CLIENT[32] = "/mq_client_1";
 
 	// * Close the queue
 	int close_servermq_response = mq_close(serverQueue);
-	
-	if(close_servermq_response == -1) return -1; // return -1 if the queue was not closed
+
+	if (close_servermq_response == -1)
+		return -1; // return -1 if the queue was not closed
 
 	int close_clientmq_response = mq_close(clientQueue);
 
-	if(close_clientmq_response == -1) return -1; // return -1 if the queue was not closed
+	if (close_clientmq_response == -1)
+		return -1; // return -1 if the queue was not closed
 
 	// * Unlink the queue, MQ_CLIENT is removed from the system
 	int unlink_response = mq_unlink(MQ_CLIENT);
-	
-	if(unlink_response == -1) return -1; // return -1 if the queue was not unlinked
+
+	if (unlink_response == -1)
+		return -1; // return -1 if the queue was not unlinked
 
 	return 0;
 }

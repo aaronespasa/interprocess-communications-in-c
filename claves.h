@@ -4,8 +4,8 @@
 #include <fcntl.h>    /* For O_* constants */
 #include <sys/stat.h> /* For mode constants */
 #include <sys/types.h>
-#include <mqueue.h>   /* For message queue */
-#include <string.h>   /* For strlen, strcpy, sprintf */
+#include <mqueue.h> /* For message queue */
+#include <string.h> /* For strlen, strcpy, sprintf */
 #include <unistd.h>
 
 #include <stdio.h>  /* For printf */
@@ -14,7 +14,7 @@
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
 
-#define MQ_SERVER "/mq_server"   /* Queue name */
+#define MQ_SERVER "/mq_server" /* Queue name */
 
 /**
  * @brief Starts the connection with the server.
@@ -24,25 +24,25 @@
 int init();
 
 /**
-  * @brief Insert a new element clave-valor1-valor2-valor3 in the service.
-  * @param key int
-  * @param value1 char*
-  * @param value2 int
-  * @param value3 double
-  * @return 0 if the insertion was successful; -1 if the insertion failed.
-  */
+ * @brief Insert a new element clave-valor1-valor2-valor3 in the service.
+ * @param key int
+ * @param value1 char*
+ * @param value2 int
+ * @param value3 double
+ * @return 0 if the insertion was successful; -1 if the insertion failed.
+ */
 int set_value(int key, char *value1, int value2, double value3);
 
 /**
-  * @brief Assign the values of the element associated to the key to the variables value1, value2 and value3.
-  * @param key int
-  * @param value1 char*
-  * @param value2 int
-  * @param value3 double
-  * @return 0 if the element exists and the values were assigned correctly; -1 if the element does not exist, or an error occurred during communication.
-  * @note Values are assigned to the variables passed as parameters.
-  */
-int get_value(int key, char *value1, int* value2, double* value3);
+ * @brief Assign the values of the element associated to the key to the variables value1, value2 and value3.
+ * @param key int
+ * @param value1 char*
+ * @param value2 int
+ * @param value3 double
+ * @return 0 if the element exists and the values were assigned correctly; -1 if the element does not exist, or an error occurred during communication.
+ * @note Values are assigned to the variables passed as parameters.
+ */
+int get_value(int key, char *value1, int *value2, double *value3);
 
 /**
  * @brief
