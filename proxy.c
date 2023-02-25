@@ -151,7 +151,7 @@ int main(void)
 
         // * Open the queue
         serverQueue = mq_open(
-            "/mq_client_1",     // Queue name (received from client)
+            client_request.clientPID, // Queue name
             O_CREAT | O_WRONLY, // Open flags (O_RDONLY for receiver)
             S_IRUSR | S_IWUSR,  // User read/write permission
             &responseAttributes); // Assign queue attributes

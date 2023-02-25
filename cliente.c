@@ -172,7 +172,7 @@ int main()
         printf("Error al conectase con el servidor\n");
         return -1;
     }
-
+    
     test_set_value();
     test_set_value1();
     test_set_value2();

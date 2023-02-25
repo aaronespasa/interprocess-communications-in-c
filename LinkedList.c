@@ -147,7 +147,7 @@ int set_value(LinkedList *list, int key, char *value1, int value2, double value3
 
   if (exist(list, key) == 1)
   {
-    printf("¡La Key %d introducida ya existe!\n", key);
+    perror("\nThe provided key already exists");
     return -1;
   }
 
@@ -194,21 +194,21 @@ int get_value(LinkedList *list, int key, char *value1, int *value2, double *valu
 
   if (entry == NULL)
   {
-    perror("¡La Key introducida no existe!");
+    perror("\nThe provided key does not exist");
     return -1;
   }
 
   // Comprobamos que el puntero de list no es NULL
   if (list == NULL)
   {
-    perror("The list pointer is NULL!");
+    perror("\nThe list pointer is NULL!");
     return -1;
   }
 
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
   if (value1 == NULL || value2 == NULL || value3 == NULL)
   {
-    perror("One or more of the value pointers is NULL!");
+    perror("\nOne or more of the value pointers is NULL!");
     return -1;
   }
 
@@ -230,7 +230,7 @@ int modify_value(LinkedList *list, int key, char *value1, int value2, double val
   Entry *entry = search(list, key);
   if (entry == NULL)
   {
-    perror("¡La Key introducida no existe!");
+    perror("\nThe provided key does not exist");
     return -1;
   }
   strcpy(entry->value1, value1);
@@ -248,7 +248,7 @@ int delete_key(LinkedList *list, int key)
   Entry *entry = search(list, key);
   if (entry == NULL)
   {
-    perror("¡La Key introducida no existe!");
+    perror("\nThe provided key does not exist");
     return -1;
   }
   // If the entry is the head of the list, delete it.
@@ -287,7 +287,7 @@ int copy_key(LinkedList *list, int key1, int key2)
   Entry *entry1 = search(list, key1);
   if (entry1 == NULL)
   {
-    perror("¡La Key que se quiere copiar no existe!");
+    perror("\nThe provided key to copy to already exists");
     return -1;
   }
 
