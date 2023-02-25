@@ -6,12 +6,13 @@ LDFLAGS = -L$(INSTALL_PATH)/lib/
 
 LDLIBS = -lpthread -lrt
 
-all: information cliente proxy
+all: information cliente libclaves proxy
 
 information:
 	@echo "Output files:"
 	@echo "  - proxy.out"
-	@echo "  - cliente.out (uses libclaves.so)"
+	@echo "  - cliente.out"
+	@echo "  - libclaves.so"
 	@echo -e '\n'
 
 # proxy.c compilation

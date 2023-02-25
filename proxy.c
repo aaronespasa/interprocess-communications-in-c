@@ -26,7 +26,7 @@ mqd_t serverQueue;
 mqd_t clientQueue;
 
 // ! Request (Attribute declaration - send)
-struct mq_attr serverAttributes = {
+struct mq_attr requestAttributes = {
     .mq_flags = 0,                 // Flags (ignored for mq_open())
     .mq_maxmsg = 10,               // Max. # of messages on queue
     .mq_msgsize = sizeof(Request), // Max. message size (bytes)
@@ -34,7 +34,7 @@ struct mq_attr serverAttributes = {
 };
 
 // ! Response (Attribute declaration - receive)
-struct mq_attr clientAttributes = {
+struct mq_attr responseAttributes = {
     .mq_flags = 0,                  // Flags (ignored for mq_open())
     .mq_maxmsg = 1,                 // Max. # of messages on queue (only 1 response)
     .mq_msgsize = sizeof(Response), // Max. message size (bytes)
@@ -65,12 +65,13 @@ int main(void)
     int error_code = -1;
 
     // * Open the queue
-    serverQueue = mq_open(
+    clientQueue = mq_open(
         MQ_SERVER,          // Queue name
         O_CREAT | O_RDONLY, // Open flags (O_RDONLY for receiver)
         S_IRUSR | S_IWUSR,  // User read/write permission
-        &serverAttributes); // Assign queue attributes
+        &requestAttributes); // Assign queue attributes
 
+    printf("\nServer live");
     printf("\nWaiting for messages...\n\n");
 
     // If signal is received, stop the server
@@ -85,12 +86,12 @@ int main(void)
 
         // * Receive the message
         mq_receive(
-            serverQueue,             // Queue descriptor
+            clientQueue,             // Queue descriptor
             (char *)&client_request, // Message buffer (cast to char* for POSIX)
             sizeof(Request),         // Message size
             NULL);                   // Message priority (not used)
 
-        printf("Message received!\n");
+        printf(" -> Message received!\n");
 
         // * Response (message)
         Response server_response;
@@ -103,71 +104,71 @@ int main(void)
             list_display_list(list);
             break;
 
-        // case get_value_op:
-        //     char value1response[256] = "";
-        //     int *value2response = malloc(sizeof(int));
-        //     int *value3response = malloc(sizeof(int));
+        case get_value_op:
 
-        //     error_code = list_get_value(client_request.key1, value1response, value2response, value3response, list);
+            char value1response[256] = "";
+            int *value2response = malloc(sizeof(int));
+            double *value3response = malloc(sizeof(double));
 
-        //     server_response.error_code = error_code;
-        //     strcpy(server_response.value1, value1response);
-        //     server_response.value2 = *value2response;
-        //     server_response.value3 = *value3response;
+            error_code = list_get_value(client_request.key1, value1response, value2response, value3response, list);
+            server_response.error_code = error_code;
+            strcpy(server_response.value1, value1response);
+            server_response.value2 = *value2response;
+            server_response.value3 = *value3response;
 
-        //     free(value2response);
-        //     free(value3response);
+            free(value2response);
+            free(value3response);
 
-        //     list_display_list(list);
-        //     break;
+            list_display_list(list);
+            break;
 
-        // case delete_key_op:
-        //     error_code = list_delete_key(client_request.key1, list);
-        //     server_response.error_code = error_code;
-        //     list_display_list(list);
-        //     break;
+        case delete_key_op:
+            error_code = list_delete_key(client_request.key1, list);
+            server_response.error_code = error_code;
+            list_display_list(list);
+            break;
 
-        // case modify_value_op:
-        //     error_code = list_modify_value(client_request.key1, client_request.value1, client_request.value2, client_request.value3, list);
-        //     server_response.error_code = error_code;
-        //     list_display_list(list);
-        //     break;
+        case modify_value_op:
+            error_code = list_modify_value(client_request.key1, client_request.value1, client_request.value2, client_request.value3, list);
+            server_response.error_code = error_code;
+            list_display_list(list);
+            break;
 
-        // case exist_op:
-        //     error_code = list_exist(client_request.key1, list);
-        //     server_response.error_code = error_code;
-        //     list_display_list(list);
-        //     break;
+        case exist_op:
+            error_code = list_exist(client_request.key1, list);
+            server_response.error_code = error_code;
+            list_display_list(list);
+            break;
 
-        // case copy_key_op:
-        //     error_code = list_copy_key(client_request.key1, client_request.key2, list);
-        //     server_response.error_code = error_code;
-        //     list_display_list(list);
-        //     break;
+        case copy_key_op:
+            error_code = list_copy_key(client_request.key1, client_request.key2, list);
+            server_response.error_code = error_code;
+            list_display_list(list);
+            break;
         }
 
-        printf("Response created\n");
+        printf("\nResponse created");
 
         // * Open the queue
-        clientQueue = mq_open(
+        serverQueue = mq_open(
             "/mq_client_1",     // Queue name (received from client)
             O_CREAT | O_WRONLY, // Open flags (O_RDONLY for receiver)
             S_IRUSR | S_IWUSR,  // User read/write permission
-            &clientAttributes); // Assign queue attributes
+            &responseAttributes); // Assign queue attributes
 
-        printf("Queue opened");
+        printf(" -> Queue opened ");
 
         // * Send the message
         mq_send(
-            clientQueue,              // Queue descriptor
+            serverQueue,              // Queue descriptor
             (char *)&server_response, // Message buffer (cast to char* for POSIX)
             sizeof(Response),         // Message size
             0);                       // Message priority (not used)
 
-        printf("Message sent");
+        printf(" -> Message sent");
 
         // * Close the queue - free resources
-        mq_close(clientQueue);
+        mq_close(serverQueue);
     }
 
     return 0;

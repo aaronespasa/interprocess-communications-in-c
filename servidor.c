@@ -19,46 +19,41 @@ int list_set_value(int key, char *value1, int value2, double value3, LinkedList*
     return error_code;
 }
 
-// int list_get_value(int key, char *value1, int* value2, double* value3, LinkedList* list) {
-//     // get request from the linked list
-//     int error_code = get_value(list, key, value1, value2, value3);
+int list_get_value(int key, char *value1, int *value2, double *value3, LinkedList *list) {
+    // get request from the linked list
+    int error_code = get_value(list, key, value1, value2, value3);
 
-//     return error_code;
-// }
+    printf("\nLa Key %d existe y se han obtenido sus valores: %s, %d y %f\n", key, value1, *value2, *value3);
 
-// int list_modify_value(int key, char *value1, int value2, double value3, LinkedList* list) {
-//     // create request
-//     Request* request = (Request *)malloc(sizeof(Request));
-//     strcpy(request->value1, value1);
-//     request->value2 = &value2;
-//     request->value3 = &value3;
+    return error_code;
+}
 
-//     // modify request in the linked list
-//     int error_code = modify_value(list, key, request);
+int list_modify_value(int key, char *value1, int value2, double value3, LinkedList* list) {
+    // create request
+    int error_code = modify_value(list, key, value1, value2, value3);
+    return error_code;
+}
 
-//     return error_code;
-// }
+int list_delete_key(int key, LinkedList* list) {
+    // delete request from the linked list
+    int error_code = delete_key(list, key);
 
-// int list_delete_key(int key, LinkedList* list) {
-//     // delete request from the linked list
-//     int error_code = delete_key(list, key);
+    return error_code;
+}
 
-//     return error_code;
-// }
+int list_exist(int key, LinkedList* list) {
+    // check if key exists in the linked list
+    int error_code = exist(list, key);
 
-// int list_exist(int key, LinkedList* list) {
-//     // check if key exists in the linked list
-//     int error_code = exist(list, key);
+    return error_code;
+}
 
-//     return error_code;
-// }
+int list_copy_key(int key1, int key2, LinkedList* list) {
+    // copy request from key1 to key2 in the linked list
+    int error_code = copy_key(list, key1, key2);
 
-// int list_copy_key(int key1, int key2, LinkedList* list) {
-//     // copy request from key1 to key2 in the linked list
-//     int error_code = copy_key(list, key1, key2);
-
-//     return error_code;
-// }
+    return error_code;
+}
 
 void list_display_list(LinkedList* list) {
     display_list(list);

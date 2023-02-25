@@ -9,7 +9,7 @@ mqd_t serverQueue;
 mqd_t clientQueue;
 
 // ! Request (Attribute declaration - send)
-struct mq_attr serverAttributes = {
+struct mq_attr requestAttributes = {
 	.mq_flags = 0,				   // Flags (ignored for mq_open())
 	.mq_maxmsg = 10,			   // Max. # of messages on queue
 	.mq_msgsize = sizeof(Request), // Max. message size (bytes)
@@ -50,7 +50,7 @@ int init()
 		MQ_SERVER,			// Queue name
 		O_CREAT | O_WRONLY, // Open flags (O_WRONLY for sender)
 		S_IRUSR | S_IWUSR,	// User read/write permission
-		&serverAttributes); // Assign queue attributes
+		&requestAttributes); // Assign queue attributes
 
 	if (serverQueue == -1)
 		return -1; // return -1 if the queue was not created
@@ -79,15 +79,13 @@ int set_value(int key, char *value1, int value2, double value3)
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
-		.value1 = *value1,
 		.value2 = value2,
 		.value3 = value3,
 		.operacion = set_value_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(request.value1, value1);
-	// strcpy(request.clientQueue, MQ_CLIENT);
+	strcpy(client_request.value1, value1);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to assign the value
 	int send_request = mq_send(
@@ -126,15 +124,13 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
-		.value1 = *value1,
 		.value2 = *value2,
 		.value3 = *value3,
 		.operacion = get_value_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(request.value1, value1);
-	// strcpy(request.clientQueue, MQ_CLIENT);
+	strcpy(client_request.value1, value1);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to get the value
 	int send_request = mq_send(
@@ -158,11 +154,13 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
-	// strcpy(value1, server_response.value1);
-	// *value2 = response.value2;
-	// *value3 = response.value3;
+	// Modify the values of the pointers of the user with the values received from the server
+	strcpy(value1, server_response.value1);
+	*value2 = server_response.value2;
+	*value3 = server_response.value3;
 
 	return server_response.error_code;
+
 }
 
 int modify_value(int key, char *value1, int value2, double value3)
@@ -177,15 +175,15 @@ int modify_value(int key, char *value1, int value2, double value3)
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
-		.value1 = *value1,
 		.value2 = value2,
 		.value3 = value3,
 		.operacion = modify_value_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(request.value1, value1);
-	// strcpy(request.clientQueue, MQ_CLIENT);
+	// TODO: PORQ FUNCIONA CON EL STRCPY Y NO CON EL ASIGNAMIENTO DIRECTO?
+	// -> RESPUESTA: porque el strcpy copia el valor de value1 a request.value1, y el asignamiento directo asigna el valor de value1 a la direccion de memoria de request.value1, que es un puntero a char, por lo que no se puede asignar un valor a un puntero a char, solo a un puntero a un puntero a char
+	strcpy(client_request.value1, value1);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to modify the value
 	int send_request = mq_send(
@@ -221,10 +219,9 @@ int delete_key(int key)
 	Request client_request = {
 		.key1 = key,
 		.operacion = delete_key_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(request.clientQueue, MQ_CLIENT);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to delete the key
 	int send_request = mq_send(
@@ -260,10 +257,9 @@ int exist(int key)
 	Request client_request = {
 		.key1 = key,
 		.operacion = exist_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(request.clientQueue, MQ_CLIENT);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to check if the key exists
 	int send_request = mq_send(
@@ -300,10 +296,9 @@ int copy_key(int key1, int key2)
 		.key1 = key1,
 		.key2 = key2,
 		.operacion = copy_key_op,
-		.clientQueue = *MQ_CLIENT,
 	};
 
-	// strcpy(client_request.clientQueue, MQ_CLIENT);
+	strcpy(client_request.clientQueue, MQ_CLIENT);
 
 	// * Send the request to copy the key
 	int send_request = mq_send(

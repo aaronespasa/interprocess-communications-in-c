@@ -188,29 +188,36 @@ int set_value(LinkedList *list, int key, char *value1, int value2, double value3
  * Get the value of an entry with the given key.
  * Return -1 in case the key is not found.
  */
-int get_value(LinkedList* list, int key, char *value1, int* value2, double* value3) {
-  Entry* entry = search(list, key);
-  if (entry == NULL) {
+int get_value(LinkedList *list, int key, char *value1, int *value2, double *value3)
+{
+  Entry *entry = search(list, key);
+
+  if (entry == NULL)
+  {
     perror("¡La Key introducida no existe!");
     return -1;
   }
 
   // Comprobamos que el puntero de list no es NULL
-  if (list == NULL) {
+  if (list == NULL)
+  {
     perror("The list pointer is NULL!");
     return -1;
   }
 
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
-  if (value1 == NULL || value2 == NULL || value3 == NULL) {
+  if (value1 == NULL || value2 == NULL || value3 == NULL)
+  {
     perror("One or more of the value pointers is NULL!");
     return -1;
   }
 
   // Si la key existe, copiamos los valores en los punteros de value1, value2 y value3
+
   strcpy(value1, entry->value1);
   *value2 = entry->value2;
   *value3 = entry->value3;
+
   return 0;
 }
 
@@ -299,60 +306,60 @@ int copy_key(LinkedList *list, int key1, int key2)
   return 0;
 }
 
-int main(void)
-{
-  LinkedList *list = create_linked_list();
-  set_value(list, 1, "Hola", 1, 1.0);
-  set_value(list, 2, "Hola", 2, 2.0);
-  set_value(list, 5, "Hola", 3, 3.0);
-  set_value(list, 6, "No", 4, 9.0);
-  set_value(list, 7, "Hola", 3, 3.0);
-  set_value(list, 1, "Hola", 4, 4.0);
-  set_value(list, 3, "Hola", 5, 5.0);
-  modify_value(list, 1, "Hola", 6, 6.0);
-  display_list(list);
-  delete_key(list, 1);
-  delete_key(list, 7);
-  display_list(list);
-  int e0 = exist(list, 1);
-  int e1 = exist(list, 2);
-  printf("¿Existe la key 1? %d, ¿Existe la key 2? %d", e0, e1);
-  copy_key(list, 2, 1);
-  copy_key(list, 5, 6);
-  display_list(list);
-  delete_linked_list(list);
+// int main(void)
+// {
+//   LinkedList *list = create_linked_list();
+//   set_value(list, 1, "Hola", 1, 1.0);
+//   set_value(list, 2, "Hola", 2, 2.0);
+//   set_value(list, 5, "Hola", 3, 3.0);
+//   set_value(list, 6, "No", 4, 9.0);
+//   set_value(list, 7, "Hola", 3, 3.0);
+//   set_value(list, 1, "Hola", 4, 4.0);
+//   set_value(list, 3, "Hola", 5, 5.0);
+//   modify_value(list, 1, "Hola", 6, 6.0);
+//   display_list(list);
+//   delete_key(list, 1);
+//   delete_key(list, 7);
+//   display_list(list);
+//   int e0 = exist(list, 1);
+//   int e1 = exist(list, 2);
+//   printf("¿Existe la key 1? %d, ¿Existe la key 2? %d", e0, e1);
+//   copy_key(list, 2, 1);
+//   copy_key(list, 5, 6);
+//   display_list(list);
+//   delete_linked_list(list);
 
-  test_get_value();
-}
+//   test_get_value();
+// }
 
-void test_get_value() {
-  // Create a new empty linked list
-  LinkedList *list = create_linked_list();
+// void test_get_value() {
+//   // Create a new empty linked list
+//   LinkedList *list = create_linked_list();
 
-  // Add some entries to the linked list
-  set_value(list, 1, "value1", 2, 3.14);
-  set_value(list, 2, "value2", 4, 6.28);
-  set_value(list, 3, "value3", 6, 9.42);
+//   // Add some entries to the linked list
+//   set_value(list, 1, "value1", 2, 3.14);
+//   set_value(list, 2, "value2", 4, 6.28);
+//   set_value(list, 3, "value3", 6, 9.42);
 
-  // Test getting an existing value
-  char value1[256];
-  int value2;
-  double value3;
-  int result = get_value(list, 2, value1, &value2, &value3);
-  if (result == 0) {
-    printf("OKAY: got value: key=2, value1=%s, value2=%d, value3=%f\n", value1, value2, value3);
-  } else {
-    printf("ERROR: Error getting value for key=2\n");
-  }
+//   // Test getting an existing value
+//   char value1[256];
+//   int value2;
+//   double value3;
+//   int result = get_value(list, 2, value1, &value2, &value3);
+//   if (result == 0) {
+//     printf("OKAY: got value: key=2, value1=%s, value2=%d, value3=%f\n", value1, value2, value3);
+//   } else {
+//     printf("ERROR: Error getting value for key=2\n");
+//   }
 
-  // Test getting a non-existent value
-  result = get_value(list, 4, value1, &value2, &value3);
-  if (result == 0) {
-    printf("ERROR: got value for non-existent key\n");
-  } else {
-    printf("OKAY: not getting non-existent value\n");
-  }
+//   // Test getting a non-existent value
+//   result = get_value(list, 4, value1, &value2, &value3);
+//   if (result == 0) {
+//     printf("ERROR: got value for non-existent key\n");
+//   } else {
+//     printf("OKAY: not getting non-existent value\n");
+//   }
 
-  // Free the linked list
-  delete_linked_list(list);
-}
+//   // Free the linked list
+//   delete_linked_list(list);
+// }
