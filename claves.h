@@ -17,8 +17,7 @@
 #define MQ_SERVER "/mq_server" /* Queue name */
 
 /**
- * @brief Starts the connection with the server.
- *
+ * @brief Initialise service and destroys all stored tuples.
  * @return 0 if the service was initialised correctly, -1 an error occurred during communication.
  */
 int init();
@@ -75,7 +74,5 @@ int exist(int key);
  * @return 0 if values were copied correctly to key2; -1 if the key1 does not exist, or an error occurred during communication.
  */
 int copy_key(int key1, int key2);
-
-int close_queue();
 
 #endif

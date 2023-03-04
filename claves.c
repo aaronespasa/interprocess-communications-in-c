@@ -39,12 +39,8 @@ int value1_length(char *value)
 	return 0;
 }
 
-int init()
+int open_queues()
 {
-	// * Obtention of the client queue name with the PID
-	get_mq_client_name(client_qr_name);
-	printf("\nClient queue name: %s\n\n", client_qr_name);
-
 	// * Create the queue
 	serverQueue = mq_open(
 		MQ_SERVER,			 // Queue name
@@ -53,23 +49,71 @@ int init()
 		&requestAttributes); // Assign queue attributes
 
 	if (serverQueue == -1)
+	{
+		printf("Error opening server queue");
 		return -1; // return -1 if the queue was not created
+	}
 
 	// * Create the queue
 	clientQueue = mq_open(
-		client_qr_name,			  // Queue name
+		client_qr_name,		  // Queue name
 		O_CREAT | O_RDONLY,	  // Open flags (O_WRONLY for sender)
 		S_IRUSR | S_IWUSR,	  // User read/write permission
 		&responseAttributes); // Assign queue attributes
 
 	if (clientQueue == -1)
+	{
+		printf("Error opening client queue");
 		return -1; // return -1 if the queue was not created
+	}
+
+	return 0;
+}
+
+int close_client_queue()
+{
+	// * Close the client queue
+	int close_clientmq_response = mq_close(clientQueue);
+
+	if (close_clientmq_response == -1)
+		return -1; // return -1 if the queue was not closed
+
+	return 0;
+}
+
+int init()
+{
+	// * Obtention of the client queue name with the PID
+	get_mq_client_name(client_qr_name);
+	printf("\nClient queue name: %s\n\n", client_qr_name);
+
+	// * Close the queue
+	int close_servermq_response = mq_close(serverQueue);
+
+	if (close_servermq_response == -1)
+		return -1; // return -1 if the queue was not closed
+
+	int close_clientmq_response = mq_close(clientQueue);
+
+	if (close_clientmq_response == -1)
+		return -1; // return -1 if the queue was not closed
+
+	// * Unlink the queue, client_qr_name is removed from the system
+	int unlink_response = mq_unlink(client_qr_name);
+
+	mq_unlink(MQ_SERVER);
+
+	if (unlink_response == -1)
+		return -1; // return -1 if the queue was not unlinked
+
+	printf("\n");
 
 	return 0;
 }
 
 int set_value(int key, char *value1, int value2, double value3)
 {
+	open_queues();
 
 	if (value1_length(value1) == -1)
 		return -1;
@@ -107,11 +151,17 @@ int set_value(int key, char *value1, int value2, double value3)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
 }
 
 int get_value(int key, char *value1, int *value2, double *value3)
 {
+	open_queues();
+
 	// Check if the received value is bigger than 256 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
@@ -154,11 +204,16 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	*value2 = server_response.value2;
 	*value3 = server_response.value3;
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
 }
 
 int modify_value(int key, char *value1, int value2, double value3)
 {
+	open_queues();
 
 	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
@@ -199,11 +254,16 @@ int modify_value(int key, char *value1, int value2, double value3)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
 }
 
 int delete_key(int key)
 {
+	open_queues();
 
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
@@ -235,11 +295,17 @@ int delete_key(int key)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
 }
 
 int exist(int key)
 {
+	open_queues();
+
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
@@ -270,11 +336,17 @@ int exist(int key)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
 }
 
 int copy_key(int key1, int key2)
 {
+	open_queues();
+
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key1,
@@ -306,29 +378,9 @@ int copy_key(int key1, int key2)
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
 
+	// * Close the client queue
+	if (close_client_queue() == -1)
+		return -1; // return -1 if the queue was not closed
+
 	return server_response.error_code;
-}
-
-int close_queue()
-{
-	// * Close the queue
-	int close_servermq_response = mq_close(serverQueue);
-
-	if (close_servermq_response == -1)
-		return -1; // return -1 if the queue was not closed
-
-	int close_clientmq_response = mq_close(clientQueue);
-
-	if (close_clientmq_response == -1)
-		return -1; // return -1 if the queue was not closed
-
-	// * Unlink the queue, client_qr_name is removed from the system
-	int unlink_response = mq_unlink(client_qr_name);
-
-	if (unlink_response == -1)
-		return -1; // return -1 if the queue was not unlinked
-
-	printf("\n");
-
-	return 0;
 }

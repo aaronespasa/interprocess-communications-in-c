@@ -167,11 +167,13 @@ void test_copy_key1()
 
 int main()
 {
-    if (init() != 0)
-    {
-        printf("Error al conectase con el servidor\n");
-        return -1;
-    }
+    // if (init() != 0)
+    // {
+    //     printf("Error al conectase con el servidor\n");
+    //     return -1;
+    // }
+
+    init();
     
     test_set_value();
     test_set_value1();
@@ -186,8 +188,6 @@ int main()
     test_copy_key();
     
     test_copy_key1();
-
-    close_queue();
 
     return 0;
 }
