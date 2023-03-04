@@ -167,12 +167,6 @@ void test_copy_key1()
 
 int main()
 {
-    // if (init() != 0)
-    // {
-    //     printf("Error al conectase con el servidor\n");
-    //     return -1;
-    // }
-
     init();
     
     test_set_value();

@@ -3,11 +3,7 @@
  * Authors: 100451339 & 100451170
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "LinkedList.c"
+#include "servidor.h"
 
 /**
  * Insert the element <value1, value2, value3> with key <key>
@@ -15,6 +11,7 @@
 int list_set_value(int key, char *value1, int value2, double value3, LinkedList* list) {
     // insert request in the linked list
     int error_code = set_value(list, key, value1, value2, value3);
+    
 
     return error_code;
 }
