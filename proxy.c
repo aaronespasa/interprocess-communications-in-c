@@ -16,7 +16,8 @@
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
 
-#include "servidor.c"
+#include "servidor.h"
+#include "LinkedList.h"
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 

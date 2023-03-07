@@ -4,6 +4,7 @@
  */
 
 #include "servidor.h"
+#include "LinkedList.h"
 
 /**
  * Insert the element <value1, value2, value3> with key <key>

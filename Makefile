@@ -6,7 +6,9 @@ LDFLAGS = -L$(INSTALL_PATH)/lib/
 
 LDLIBS = -lpthread -lrt
 
-all: information cliente libclaves proxy
+LD_LIBRARY_PATH = ./lib
+
+all: information libclaves cliente proxy
 
 information:
 	@echo "Output files:"
@@ -16,18 +18,19 @@ information:
 	@echo -e '\n'
 
 # proxy.c compilation
-proxy: proxy.c
+proxy: proxy.c servidor.c LinkedList.c
 	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
 
 # Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
+# @$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o $@.so
 libclaves: claves.c
-	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o $@.so
+	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o ./lib/$@.so
 
 # Client compilation
-cliente: cliente.c claves.c
-	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
+cliente: cliente.c
+	@$(CC) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out -L$(LD_LIBRARY_PATH) -lclaves
 
 clean:
-	@rm -f *.o *.out *.so
+	@rm -f *.o *.out *.so ./lib/libclaves.so
 	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi
 	@echo -e "All files removed"'\n'
