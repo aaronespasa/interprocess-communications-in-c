@@ -7,7 +7,7 @@
 
 #include <pthread.h>
 
-#include "LinkedList.c"
+#include "LinkedList.h"
 
 #define TRUE 1
 #define FALSE 0

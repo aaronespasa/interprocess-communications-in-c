@@ -5,21 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-typedef struct Entry
-{
-  int key;
-  char value1[256];
-  int value2;
-  double value3;
-  struct Entry *next;
-} Entry;
-
-// Implement a linked list of Entry
-typedef struct
-{
-  Entry *head;
-  int size;
-} LinkedList;
+#include "LinkedList.h"
 
 /**
  * Search for an entry with the given key.
