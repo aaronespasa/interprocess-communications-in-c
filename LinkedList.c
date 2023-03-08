@@ -47,6 +47,11 @@ void delete_entry(Entry *entry)
   free(entry);
 }
 
+void delete_list(LinkedList *list)
+{
+  free(list);
+}
+
 /**
  * Delete the entire linked list.
  */
@@ -59,7 +64,7 @@ void delete_linked_list(LinkedList *list)
     delete_entry(current);
     current = next;
   }
-  free(list);
+  delete_list(list);
 }
 
 /**
@@ -124,6 +129,7 @@ int exist(LinkedList *list, int key)
 
 int init(LinkedList *list)
 {
+  printf("\nInitializing the linked list...\n");
   Entry *current = list->head;
   while (current != NULL)
   {
@@ -131,6 +137,8 @@ int init(LinkedList *list)
     delete_entry(current);
     current = next;
   }
+  list->head = NULL;  // Update the head of the list to NULL as it is empty now
+  list->size = 0;   // Update the size of the list
   return 0;
 }
 
@@ -238,10 +246,10 @@ int modify_value(LinkedList *list, int key, char *value1, int value2, double val
   return 0;
 }
 
-// /**
-//   * Delete an entry with the given key.
-//   * Return -1 in case the key is not found.
-//   */
+/**
+ * Delete an entry with the given key.
+ * Return -1 in case the key is not found.
+ */
 int delete_key(LinkedList *list, int key)
 {
   Entry *entry = search(list, key);

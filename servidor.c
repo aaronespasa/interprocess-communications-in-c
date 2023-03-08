@@ -9,7 +9,6 @@
 int list_init(LinkedList *list)
 {
     // initialize linked list
-    printf("calling init() from linkedlist...\n");
     int error_code = init(list);
     return error_code;
 }

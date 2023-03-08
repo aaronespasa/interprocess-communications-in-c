@@ -6,14 +6,13 @@
 // We'll use this enum to identify the operation to be performed
 typedef enum
 {
-    // init_op = 0,
-    set_value_op = 0,
-    get_value_op = 1,
-    delete_key_op = 2,
-    modify_value_op = 3,
-    exist_op = 4,
-    copy_key_op = 5,
-    init_op = 6 // ? No entiendo porq no funciona si se le asigna 0
+    init_op = 0,
+    set_value_op = 1,
+    get_value_op = 2,
+    delete_key_op = 3,
+    modify_value_op = 4,
+    exist_op = 5,
+    copy_key_op = 6,
 } OPERATION;
 
 // ! Request structure

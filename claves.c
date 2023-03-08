@@ -39,12 +39,27 @@ int value1_length(char *value)
 	return 0;
 }
 
+void print_client_queue_name(char *client_qr_name, char *client_qr_name_copy)
+{
+	// If pid has changed print the client queue name
+	if (strcmp(client_qr_name, client_qr_name_copy) != 0)
+	{
+		printf("\nClient queue name: %s\n\n", client_qr_name);
+	}
+}
+
 int open_queues()
 {
+	// We make a copy of client_qr_name to compare it with the new one
+	char client_qr_name_copy[32];
+	strcpy(client_qr_name_copy, client_qr_name);
 	// * Obtention of the client queue name with the PID
 	get_mq_client_name(client_qr_name);
-	printf("\nClient queue name: %s\n\n", client_qr_name);
-	// TODO: porque solo se imprime una vez?
+
+	// If pid has changed print the client queue name
+	print_client_queue_name(client_qr_name, client_qr_name_copy);
+
+	
 
 	// * Create the queue
 	serverQueue = mq_open(
@@ -89,9 +104,9 @@ int close_client_queue()
 int init()
 {
 	open_queues();
-	
+
 	// !Send the request(Request(message) declaration)
-	printf("INIT1");
+
 	Request client_request = {
 		.operacion = init_op,
 	};
@@ -104,12 +119,12 @@ int init()
 		(char *)&client_request, // Message buffer (cast to char* for POSIX)
 		sizeof(Request),		 // Message size as the created request
 		0);						 // Message priority
-	printf("INIT2");
+
 	if (send_request == -1)
 		return -1; // return -1 if the message was not sent
 
 	Response server_response;
-	printf("INIT3");
+
 	// * Receive the response
 	int receive_response = mq_receive(
 		clientQueue,			  // Queue descriptor
@@ -119,7 +134,7 @@ int init()
 
 	if (receive_response == -1)
 		return -1; // return -1 if the message was not received
-	printf("INIT4");
+
 	// * Close the client queue
 	if (close_client_queue() == -1)
 		return -1; // return -1 if the queue was not closed

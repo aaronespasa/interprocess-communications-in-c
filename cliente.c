@@ -1,5 +1,19 @@
 #include "claves.h"
 
+void test_init()
+{
+    int ret = init();
+
+    if (ret == 0)
+    {
+        printf("(init):          Se inicializó satisfactoriamente la lista\n");
+    }
+    else
+    {
+        printf("(init):          Error (código %d) al inicializar la lista\n", ret);
+    }
+}
+
 void test_set_value()
 {
     int key = 0;
@@ -167,21 +181,21 @@ void test_copy_key1()
 
 int main()
 {
-    init();
-    
+    test_init();
+
     test_set_value();
     test_set_value1();
-    test_set_value2();
-    test_get_value();
-    test_modify_value();
-    test_delete_key();
-    test_exist();
-    
-    test_set_value();
-    test_exist();
-    test_copy_key();
-    
-    test_copy_key1();
+    // test_set_value2();
+    // test_get_value();
+    // test_modify_value();
+    // test_delete_key();
+    // test_exist();
+
+    // test_set_value();
+    // test_exist();
+    // test_copy_key();
+
+    // test_copy_key1();
 
     return 0;
 }

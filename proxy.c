@@ -64,14 +64,12 @@ void deal_with_request(Request *client_request)
     // * Response (message)
     Response server_response;
 
-    printf(" -> Generate response:\n");
+    printf(" -> Execute operation (id %d):\n", client_request->operacion);
 
     switch (client_request->operacion)
     {
     case init_op:
-        printf("CASE: init_op");
         server_response.error_code = list_init(list);
-        printf(" -> Response: %d (error code)\n", server_response.error_code);
         list_display_list(list);
         break;
     case set_value_op:
