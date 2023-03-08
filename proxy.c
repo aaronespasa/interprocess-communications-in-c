@@ -42,6 +42,11 @@ struct mq_attr responseAttributes = {
     .mq_curmsgs = 0,                // # of messages currently in queue
 };
 
+// ! Mutex & Condition variables
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int busy = FALSE;
+
 // We use a signal handler to stop the server, forced to declare and use signum to avoid warnings
 // ! Signal handler
 void stopServer(int signum)
@@ -61,10 +66,14 @@ void stopServer(int signum)
 
 void deal_with_request(Request *client_request)
 {
+
     // * Response (message)
     Response server_response;
 
-    printf(" -> Execute operation (id %d):\n", client_request->operacion);
+    printf("Message Received -> Execute operation (id %d):\n", client_request->operacion);
+
+    // ! Section to be changed
+    pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
 
     switch (client_request->operacion)
     {
@@ -122,8 +131,14 @@ void deal_with_request(Request *client_request)
 
     printf("Response created");
 
-    // * Close the queue - free resources
-    mq_close(serverQueue);
+    mq_close(serverQueue); // Close the queue (free resources)
+
+    // ! Section to be parallelized
+    busy = FALSE;
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mutex);
+
+    pthread_exit(NULL); // Exit the thread
 }
 
 int main(void)
@@ -143,6 +158,15 @@ int main(void)
     // If signal is received, stop the server
     signal(SIGINT, stopServer);
 
+    // ! Thread attributes
+    pthread_attr_t attr;                                         // Thread attributes
+    pthread_attr_init(&attr);                                    // Initialize the attribute
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED); // Set the attribute to detached
+
+    // ! Mutex & Condition variables
+    pthread_mutex_init(&mutex, NULL); // Initialize the mutex
+    pthread_cond_init(&cond, NULL);   // Initialize the condition variable
+
     // of messages sent/set of messages received and so we dont have to force break the loop
     while (1)
     {
@@ -156,12 +180,30 @@ int main(void)
             sizeof(Request),         // Message size
             NULL);                   // Message priority (not used)
 
-        printf("Message received");
+        // ! We create a thread for each request and execute the function deal_with_request
+        pthread_t thread; // create threads to handle the requests as they come in
 
-        deal_with_request(&client_request);
+        pthread_create(&thread, &attr, (void *)deal_with_request, (void *)&client_request);
+
+        // ! Wait for the thread to finish (child copies the descriptor)
+        pthread_mutex_lock(&mutex); // Lock the mutex
+        while (busy == TRUE)
+        {
+            printf("waiting");                // If the thread is busy, wait
+            pthread_cond_wait(&cond, &mutex); // Wait for the condition variable
+        }
+        busy = TRUE;                  // Set the thread as busy
+        pthread_mutex_unlock(&mutex); // Unlock the mutex
 
         printf(" -> Response sent!\n\n");
     }
 
     return 0;
 }
+
+/*
+The list data structure is shared among threads, so proper synchronization mechanisms such as mutexes and condition variables must be used to avoid data races.
+The busy flag seems to be used to indicate whether the critical section of code is being executed. Its usage should also be protected by a mutex.
+The request and response message queues should be created with the O_CREAT flag only once, before the threads are created. Otherwise, if a thread tries to create a message queue that already exists, it will fail.
+The signal handler should also protect shared resources with a mutex, to prevent data races if a signal is received while a thread is accessing those resources.
+*/

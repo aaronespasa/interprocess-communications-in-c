@@ -185,8 +185,8 @@ int main()
 
     test_set_value();
     test_set_value1();
-    // test_set_value2();
-    // test_get_value();
+    test_set_value2();
+    test_get_value();
     // test_modify_value();
     // test_delete_key();
     // test_exist();
