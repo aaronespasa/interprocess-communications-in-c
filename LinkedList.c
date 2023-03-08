@@ -122,11 +122,24 @@ int exist(LinkedList *list, int key)
  * - copy_key
  */
 
+int init(LinkedList *list)
+{
+  Entry *current = list->head;
+  while (current != NULL)
+  {
+    Entry *next = current->next;
+    delete_entry(current);
+    current = next;
+  }
+  return 0;
+}
+
 /**
  * Insert a new entry into the linked list. The entry is inserted sorted by key.
  * Returns 0 if the insertion was successful.
  * Returns -1 if the insertion failed.
  */
+
 int set_value(LinkedList *list, int key, char *value1, int value2, double value3)
 {
   Entry *entry = create_entry(key, value1, value2, value3);

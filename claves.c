@@ -41,6 +41,11 @@ int value1_length(char *value)
 
 int open_queues()
 {
+	// * Obtention of the client queue name with the PID
+	get_mq_client_name(client_qr_name);
+	printf("\nClient queue name: %s\n\n", client_qr_name);
+	// TODO: porque solo se imprime una vez?
+
 	// * Create the queue
 	serverQueue = mq_open(
 		MQ_SERVER,			 // Queue name
@@ -83,38 +88,50 @@ int close_client_queue()
 
 int init()
 {
-	// * Obtention of the client queue name with the PID
-	get_mq_client_name(client_qr_name);
-	printf("\nClient queue name: %s\n\n", client_qr_name);
+	open_queues();
+	
+	// !Send the request(Request(message) declaration)
+	printf("INIT1");
+	Request client_request = {
+		.operacion = init_op,
+	};
 
-	// * Close the queue
-	int close_servermq_response = mq_close(serverQueue);
+	strcpy(client_request.clientPID, client_qr_name);
 
-	if (close_servermq_response == -1)
+	// * Send the request to assign the value
+	int send_request = mq_send(
+		serverQueue,			 // Queue descriptor
+		(char *)&client_request, // Message buffer (cast to char* for POSIX)
+		sizeof(Request),		 // Message size as the created request
+		0);						 // Message priority
+	printf("INIT2");
+	if (send_request == -1)
+		return -1; // return -1 if the message was not sent
+
+	Response server_response;
+	printf("INIT3");
+	// * Receive the response
+	int receive_response = mq_receive(
+		clientQueue,			  // Queue descriptor
+		(char *)&server_response, // Message buffer (cast to char* for POSIX)
+		sizeof(Response),		  // Message size as the created response
+		NULL);					  // Message priority (ignored)
+
+	if (receive_response == -1)
+		return -1; // return -1 if the message was not received
+	printf("INIT4");
+	// * Close the client queue
+	if (close_client_queue() == -1)
 		return -1; // return -1 if the queue was not closed
 
-	int close_clientmq_response = mq_close(clientQueue);
-
-	if (close_clientmq_response == -1)
-		return -1; // return -1 if the queue was not closed
-
-	// * Unlink the queue, client_qr_name is removed from the system
-	int unlink_response = mq_unlink(client_qr_name);
-
-	mq_unlink(MQ_SERVER);
-
-	if (unlink_response == -1)
-		return -1; // return -1 if the queue was not unlinked
-
-	printf("\n");
-
-	return 0;
+	return server_response.error_code;
 }
 
 int set_value(int key, char *value1, int value2, double value3)
 {
 	open_queues();
 
+	// Check if len of value 1 is more than 256 chars
 	if (value1_length(value1) == -1)
 		return -1;
 
