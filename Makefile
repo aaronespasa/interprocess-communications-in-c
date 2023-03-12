@@ -42,4 +42,4 @@ cliente: cliente.c
 clean:
 	@rm -f *.o *.out *.so ./lib/*.so -d ./lib
 	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi
-	@echo -e '\n'"All files removed"'\n'
+	@echo '\n'"All files removed"'\n'

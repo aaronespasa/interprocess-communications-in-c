@@ -1,4 +1,9 @@
+#include <pthread.h>
+
 #include "claves.h"
+
+#define NUM_THREADS 1
+
 
 void test_init()
 {
@@ -6,15 +11,15 @@ void test_init()
 
     if (ret == 0)
     {
-        printf("(init):          Se inicializó satisfactoriamente la lista\n");
+        printf("(    init     ):     Se inicializó satisfactoriamente la lista\n");
     }
     else
     {
-        printf("(init):          Error (código %d) al inicializar la lista\n", ret);
+        printf("(    init     ):     Error (código %d) al inicializar la lista\n", ret);
     }
 }
 
-void test_set_value()
+void test_set_value(unsigned long thread_num)
 {
     int key = 0;
     char value1[256] = "Hola mundo";
@@ -25,15 +30,15 @@ void test_set_value()
 
     if (ret == 0)
     {
-        printf("(set_value):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", value1, value2, value3, key);
+        printf("(set_value - %lu):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", thread_num, value1, value2, value3, key);
     }
     else
     {
-        printf("(set_value):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", ret, value1, value2, value3, key);
+        printf("(set_value - %lu):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", thread_num, ret, value1, value2, value3, key);
     }
 }
 
-void test_set_value1()
+void test_set_value1(unsigned long thread_num)
 {
     int key = 3;
     char value1[256] = "Hola mundo";
@@ -44,15 +49,15 @@ void test_set_value1()
 
     if (ret == 0)
     {
-        printf("(set_value):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", value1, value2, value3, key);
+        printf("(set_value - %lu):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", thread_num, value1, value2, value3, key);
     }
     else
     {
-        printf("(set_value):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", ret, value1, value2, value3, key);
+        printf("(set_value - %lu):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", thread_num, ret, value1, value2, value3, key);
     }
 }
 
-void test_set_value2()
+void test_set_value2(unsigned long thread_num)
 {
     int key = 2;
     char value1[256] = "Hola mundo";
@@ -63,17 +68,16 @@ void test_set_value2()
 
     if (ret == 0)
     {
-        printf("(set_value):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", value1, value2, value3, key);
+        printf("(set_value - %lu):     Se guardó satisfactoriamente el valor (%s, %d, %f) en la clave %d\n", thread_num, value1, value2, value3, key);
     }
     else
     {
-        printf("(set_value):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", ret, value1, value2, value3, key);
+        printf("(set_value - %lu):     Error (código %d) al guardar el valor (%s, %d, %f) en la clave %d\n", thread_num, ret, value1, value2, value3, key);
     }
 }
 
-void test_get_value()
+void test_get_value(int key, unsigned long thread_num)
 {
-    int key = 0;
     char value1[256] = "";
     int *value2 = malloc(sizeof(int));
     double *value3 = malloc(sizeof(double));
@@ -82,15 +86,15 @@ void test_get_value()
 
     if (ret == 0)
     {
-        printf("(get_value):     Se obtuvo satisfactoriamente el valor (%s, %d, %f) de la clave %d\n", value1, *value2, *value3, key);
+        printf("(get_value - %lu):     Se obtuvo satisfactoriamente el valor (%s, %d, %f) de la clave %d\n", thread_num, value1, *value2, *value3, key);
     }
     else
     {
-        printf("(get_value):     Error (código %d) al obtener el valor de la clave %d\n", ret, key);
+        printf("(get_value - %lu):     Error (código %d) al obtener el valor de la clave %d\n", thread_num, ret, key);
     }
 }
 
-void test_modify_value()
+void test_modify_value(unsigned long thread_num)
 {
     int key = 2;
     char value1[256] = "Hola jefe";
@@ -101,15 +105,15 @@ void test_modify_value()
 
     if (ret == 0)
     {
-        printf("(modify_value):  Se modificó satisfactoriamente la clave %d con el nuevo valor (%s, %d, %f)\n", key, value1, value2, value3);
+        printf("(modify_value - %lu):  Se modificó satisfactoriamente la clave %d con el nuevo valor (%s, %d, %f)\n", thread_num, key, value1, value2, value3);
     }
     else
     {
-        printf("(modify_value):  Error (código %d) al modificar la clave %d con el nuevo valor (%s, %d, %f)\n", ret, key, value1, value2, value3);
+        printf("(modify_value - %lu):  Error (código %d) al modificar la clave %d con el nuevo valor (%s, %d, %f)\n", thread_num, ret, key, value1, value2, value3);
     }
 }
 
-void test_delete_key()
+void test_delete_key(unsigned long thread_num)
 {
     int key = 0;
 
@@ -117,15 +121,15 @@ void test_delete_key()
 
     if (ret == 0)
     {
-        printf("(delete_key):    Se eliminó satisfactoriamente la clave %d\n", key);
+        printf("(delete_key - %lu):    Se eliminó satisfactoriamente la clave %d\n", thread_num, key);
     }
     else
     {
-        printf("(delete_key):    Error (código %d) al eliminar la clave %d\n", ret, key);
+        printf("(delete_key - %lu):    Error (código %d) al eliminar la clave %d\n", thread_num, ret, key);
     }
 }
 
-void test_exist()
+void test_exist(unsigned long thread_num)
 {
     int key = 0;
 
@@ -133,19 +137,19 @@ void test_exist()
 
     if (ret == 1)
     {
-        printf("(exist):         La clave %d si existe\n", key);
+        printf("(exist - %lu):         La clave %d si existe\n", thread_num, key);
     }
     else if (ret == 0)
     {
-        printf("(exist):         La clave %d no existe\n", key);
+        printf("(exist - %lu):         La clave %d no existe\n", thread_num, key);
     }
     else
     {
-        printf("(exist):         Error (código %d) al verificar si la clave %d existe\n", ret, key);
+        printf("(exist - %lu):         Error (código %d) al verificar si la clave %d existe\n", thread_num, ret, key);
     }
 }
 
-void test_copy_key()
+void test_copy_key(unsigned long thread_num)
 {
     int key1 = 0;
     int key2 = 1;
@@ -154,15 +158,15 @@ void test_copy_key()
 
     if (ret == 0)
     {
-        printf("(copy_key):      La clave %d se copio satisfactoriamente en la clave %d\n", key1, key2);
+        printf("(copy_key - %lu):      La clave %d se copio satisfactoriamente en la clave %d\n", thread_num, key1, key2);
     }
     else
     {
-        printf("(copy_key):      Error (código %d) al copiar la clave %d en la clave %d\n", ret, key1, key2);
+        printf("(copy_key - %lu):      Error (código %d) al copiar la clave %d en la clave %d\n", thread_num, ret, key1, key2);
     }
 }
 
-void test_copy_key1()
+void test_copy_key1(unsigned long thread_num)
 {
     int key1 = 0;
     int key2 = 2;
@@ -171,31 +175,53 @@ void test_copy_key1()
 
     if (ret == 0)
     {
-        printf("(copy_key):      La clave %d se copio satisfactoriamente en la clave %d\n", key1, key2);
+        printf("(copy_key - %lu):      La clave %d se copio satisfactoriamente en la clave %d\n", thread_num, key1, key2);
     }
     else
     {
-        printf("(copy_key):      Error (código %d) al copiar la clave %d en la clave %d\n", ret, key1, key2);
+        printf("(copy_key - %lu):      Error (código %d) al copiar la clave %d en la clave %d\n", thread_num, ret, key1, key2);
     }
+}
+
+void call_test(int* thread_num)
+{
+
+    test_set_value(*thread_num);
+    test_set_value1(*thread_num);
+    test_set_value2(*thread_num);
+    test_get_value(2, *thread_num);
+    // test_modify_value(thread_num);
+    // test_delete_key(thread_num);
+    // test_exist(thread_num);
+
+    // test_set_value(thread_num);
+    // test_exist(thread_num);
+    // test_copy_key(thread_num);
+
+    // test_copy_key1(thread_num);
 }
 
 int main()
 {
     test_init();
 
-    test_set_value();
-    test_set_value1();
-    test_set_value2();
-    test_get_value();
-    // test_modify_value();
-    // test_delete_key();
-    // test_exist();
+    pthread_t thread[NUM_THREADS];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    // test_set_value();
-    // test_exist();
-    // test_copy_key();
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_create(&thread[i], &attr, (void *)call_test, (void *)&i);
+    }
 
-    // test_copy_key1();
+
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(thread[i], NULL);
+    }
+
+    pthread_attr_destroy(&attr);
 
     return 0;
 }
