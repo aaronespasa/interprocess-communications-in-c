@@ -2,8 +2,12 @@
 
 #include "claves.h"
 
-#define NUM_THREADS 1
+#define NUM_THREADS 2
 
+typedef struct thread_data
+{
+    unsigned long thread_num;
+} thread_data;
 
 void test_init()
 {
@@ -183,13 +187,13 @@ void test_copy_key1(unsigned long thread_num)
     }
 }
 
-void call_test(int* thread_num)
+void call_test(thread_data* th_data)
 {
 
-    test_set_value(*thread_num);
-    test_set_value1(*thread_num);
-    test_set_value2(*thread_num);
-    test_get_value(2, *thread_num);
+    test_set_value(th_data->thread_num);
+    test_set_value1(th_data->thread_num);
+    test_set_value2(th_data->thread_num);
+    test_get_value(2, th_data->thread_num);
     // test_modify_value(thread_num);
     // test_delete_key(thread_num);
     // test_exist(thread_num);
@@ -206,13 +210,16 @@ int main()
     test_init();
 
     pthread_t thread[NUM_THREADS];
+    thread_data th_data[NUM_THREADS];
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        pthread_create(&thread[i], &attr, (void *)call_test, (void *)&i);
+        th_data[i].thread_num = i;
+
+        pthread_create(&thread[i], &attr, (void *)call_test, (void *)&th_data[i]);
     }
 
 
