@@ -8,7 +8,11 @@
 mqd_t serverQueue;
 mqd_t clientQueue;
 
-char client_qr_name[32];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// the following two variables are used to print the client queue name only once
+int num_of_clients_printed = 0;
+char client_names[NUM_THREADS][32];
 
 // ! Request (Attribute declaration - send)
 struct mq_attr requestAttributes = {
@@ -28,7 +32,7 @@ struct mq_attr responseAttributes = {
 
 void get_mq_client_name(char *qr_client_name)
 {
-	sprintf(qr_client_name, "/mq_client_%d", getpid());
+	sprintf(qr_client_name, "/mq_client_%lu", pthread_self());
 }
 
 int value1_length(char *value)
@@ -39,26 +43,51 @@ int value1_length(char *value)
 	return 0;
 }
 
-void print_client_queue_name(char *client_qr_name, char *client_qr_name_copy)
+void print_client_queue_name()
 {
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+
 	// If pid has changed print the client queue name
-	if (strcmp(client_qr_name, client_qr_name_copy) != 0)
+	// if (strcmp(client_qr_name, client_qr_name_copy) != 0)
+	// {
+
+	pthread_mutex_lock(&mutex);
+	// check if client_qr_name is in client_names
+	int client_qr_name_in_client_names = 0;
+	for (int i = 0; i < NUM_THREADS; i++)
+	{
+		if (strcmp(client_names[i], client_qr_name) == 0)
+		{
+			client_qr_name_in_client_names = 1;
+			break;
+		}
+	}
+
+	if (num_of_clients_printed < NUM_THREADS && client_qr_name_in_client_names == 0)
 	{
 		printf("\nClient queue name: %s\n\n", client_qr_name);
+		strcpy(client_names[num_of_clients_printed], client_qr_name);
+		num_of_clients_printed++;
 	}
+
+	pthread_mutex_unlock(&mutex);
+	// }
 }
 
 int open_queues()
 {
 	// We make a copy of client_qr_name to compare it with the new one
-	char client_qr_name_copy[32];
-	strcpy(client_qr_name_copy, client_qr_name);
+	// char client_qr_name_copy[32];
+	// strcpy(client_qr_name_copy, client_qr_name);
 	// * Obtention of the client queue name with the PID
-	get_mq_client_name(client_qr_name);
+	// get_mq_client_name(client_qr_name);
 
 	// If pid has changed print the client queue name
-	print_client_queue_name(client_qr_name, client_qr_name_copy);
-
+	// print_client_queue_name(client_qr_name, client_qr_name_copy);
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+	print_client_queue_name();
 	
 
 	// * Create the queue
@@ -111,6 +140,9 @@ int init()
 		.operacion = init_op,
 	};
 
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+
 	strcpy(client_request.clientPID, client_qr_name);
 
 	// * Send the request to assign the value
@@ -157,6 +189,9 @@ int set_value(int key, char *value1, int value2, double value3)
 		.value3 = value3,
 		.operacion = set_value_op,
 	};
+
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
 
 	strcpy(client_request.value1, value1);
 	strcpy(client_request.clientPID, client_qr_name);
@@ -206,6 +241,9 @@ int get_value(int key, char *value1, int *value2, double *value3)
 		.operacion = get_value_op,
 	};
 
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+
 	strcpy(client_request.value1, value1);
 	strcpy(client_request.clientPID, client_qr_name);
 
@@ -246,6 +284,9 @@ int get_value(int key, char *value1, int *value2, double *value3)
 int modify_value(int key, char *value1, int value2, double value3)
 {
 	open_queues();
+
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
 
 	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
@@ -297,6 +338,9 @@ int delete_key(int key)
 {
 	open_queues();
 
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
@@ -338,6 +382,9 @@ int exist(int key)
 {
 	open_queues();
 
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
+
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {
 		.key1 = key,
@@ -378,6 +425,8 @@ int exist(int key)
 int copy_key(int key1, int key2)
 {
 	open_queues();
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
 
 	// ! Send the request (Request (message) declaration)
 	Request client_request = {

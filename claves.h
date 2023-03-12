@@ -3,16 +3,19 @@
 
 #include <fcntl.h>    /* For O_* constants */
 #include <sys/stat.h> /* For mode constants */
-#include <sys/types.h>
+#include <sys/types.h> /* For mode constants */
 #include <mqueue.h> /* For message queue */
 #include <string.h> /* For strlen, strcpy, sprintf */
-#include <unistd.h>
+#include <unistd.h> /* For sleep */
+#include <pthread.h> /* For threads */
 
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For exit */
 
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
+
+#define NUM_THREADS 2 /* Number of threads */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 

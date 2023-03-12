@@ -94,11 +94,11 @@ void display_list(LinkedList *list)
 
   while (current != NULL)
   {
-    printf("\nComponents of the entry %d (%p):\n", iter, current);
-    printf("Key:    %d\n", current->key);
-    printf("Value1: %s\n", current->value1);
-    printf("Value2: %d\n", current->value2);
-    printf("Value3: %f\n", current->value3);
+    printf("\nComponents of the entry %d (%p): [", iter, current);
+    printf("key: %d, ", current->key);
+    printf("val1: %s, ", current->value1);
+    printf("val2: %d, ", current->value2);
+    printf("val3: %f]\n", current->value3);
     current = current->next;
     iter++;
   }

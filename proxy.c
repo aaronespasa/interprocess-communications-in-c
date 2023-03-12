@@ -64,44 +64,36 @@ void stopServer(int signum)
 
 void deal_with_request(Request *client_request)
 {
+    // * Lock the mutex on the process of request copying
+    pthread_mutex_lock(&mutex);
+    Request client_request_copy = *client_request;
+    busy = false;
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mutex);
 
     // * Response (message)
     Response server_response;
 
-    printf("Message Received -> Execute operation (id %d):\n", client_request->operacion);
+    printf("Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
 
-    switch (client_request->operacion)
+    switch (client_request_copy.operacion)
     {
     case init_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
         server_response.error_code = list_init(list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case set_value_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
-        server_response.error_code = list_set_value(client_request->key1, client_request->value1, client_request->value2, client_request->value3, list);
+        server_response.error_code = list_set_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3, list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case get_value_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
         char value1response[256] = "";
         int *value2response = malloc(sizeof(int));
         double *value3response = malloc(sizeof(double));
 
-        server_response.error_code = list_get_value(client_request->key1, value1response, value2response, value3response, list);
+        server_response.error_code = list_get_value(client_request_copy.key1, value1response, value2response, value3response, list);
         strcpy(server_response.value1, value1response);
         server_response.value2 = *value2response;
         server_response.value3 = *value3response;
@@ -109,60 +101,32 @@ void deal_with_request(Request *client_request)
         free(value2response);
         free(value3response);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case delete_key_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
-        server_response.error_code = list_delete_key(client_request->key1, list);
+        server_response.error_code = list_delete_key(client_request_copy.key1, list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case modify_value_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
-        server_response.error_code = list_modify_value(client_request->key1, client_request->value1, client_request->value2, client_request->value3, list);
+        server_response.error_code = list_modify_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3, list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case exist_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
-        server_response.error_code = list_exist(client_request->key1, list);
+        server_response.error_code = list_exist(client_request_copy.key1, list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
 
     case copy_key_op:
-        pthread_mutex_lock(&mutex); // Lock the mutex as the list is being modified (WRITE operation)
-
-        server_response.error_code = list_copy_key(client_request->key1, client_request->key2, list);
+        server_response.error_code = list_copy_key(client_request_copy.key1, client_request_copy.key2, list);
         list_display_list(list);
-
-        busy = false;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         break;
     }
 
     // * Open the queue
     serverQueue = mq_open(
-        client_request->clientPID, // Queue name
+        client_request_copy.clientPID, // Queue name
         O_CREAT | O_WRONLY,        // Open flags (O_WRONLY for sender)
         S_IRUSR | S_IWUSR,         // User read/write permission
         &responseAttributes);      // Assign queue attributes
@@ -174,7 +138,7 @@ void deal_with_request(Request *client_request)
         sizeof(Response),         // Message size
         0);                       // Message priority (not used)
 
-    printf("Response created");
+    // printf("Response created");
 
     mq_close(serverQueue); // Close the queue (free resources)
 
@@ -237,7 +201,7 @@ int main(void)
         busy = true;                  // Set the thread as busy
         pthread_mutex_unlock(&mutex); // Unlock the mutex
 
-        printf(" -> Response sent!\n\n");
+        // printf(" -> Response sent!\n\n");
     }
 
     return 0;

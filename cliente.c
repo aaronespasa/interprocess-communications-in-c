@@ -1,13 +1,14 @@
-#include <pthread.h>
-
 #include "claves.h"
 
-#define NUM_THREADS 2
+#include <stdbool.h>
 
 typedef struct thread_data
 {
     unsigned long thread_num;
+    bool call_init;
 } thread_data;
+
+pthread_mutex_t protect_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void test_init()
 {
@@ -189,6 +190,12 @@ void test_copy_key1(unsigned long thread_num)
 
 void call_test(thread_data* th_data)
 {
+    pthread_mutex_lock(&protect_init_mutex);
+    if(th_data->call_init == true){
+        test_init();
+    }
+    pthread_mutex_unlock(&protect_init_mutex);
+
 
     test_set_value(th_data->thread_num);
     test_set_value1(th_data->thread_num);
@@ -207,8 +214,6 @@ void call_test(thread_data* th_data)
 
 int main()
 {
-    test_init();
-
     pthread_t thread[NUM_THREADS];
     thread_data th_data[NUM_THREADS];
     pthread_attr_t attr;
@@ -218,6 +223,7 @@ int main()
     for (int i = 0; i < NUM_THREADS; i++)
     {
         th_data[i].thread_num = i;
+        th_data[i].call_init = i == 0 ? true : false; // only the first thread calls init
 
         pthread_create(&thread[i], &attr, (void *)call_test, (void *)&th_data[i]);
     }

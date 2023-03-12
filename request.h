@@ -15,6 +15,8 @@ typedef enum
     copy_key_op = 6,
 } OPERATION;
 
+char* OPERATION_NAMES[7] = {"init", "set_value", "get_value", "delete_key", "modify_value", "exist", "copy_key"};
+
 // ! Request structure
 // If operation is not using all the fields, they will be ignored
 typedef struct
