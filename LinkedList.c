@@ -1,4 +1,8 @@
-// gcc -o LinkedList.out LinkedList.c -Wall -Wextra -Werror && ./LinkedList.out
+/*
+ * File: LinkedList.c
+ * Authors: 100451339 & 100451170
+ */
+
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -137,8 +141,8 @@ int init(LinkedList *list)
     delete_entry(current);
     current = next;
   }
-  list->head = NULL;  // Update the head of the list to NULL as it is empty now
-  list->size = 0;   // Update the size of the list
+  list->head = NULL; // Update the head of the list to NULL as it is empty now
+  list->size = 0;    // Update the size of the list
   return 0;
 }
 

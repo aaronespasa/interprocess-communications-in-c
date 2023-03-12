@@ -1,3 +1,8 @@
+/*
+ * File: servidor.h
+ * Authors: 100451339 & 100451170
+ */
+
 #ifndef SERVIDOR_H
 #define SERVIDOR_H
 
@@ -9,8 +14,10 @@
 
 #include "LinkedList.h"
 
-#define TRUE 1
-#define FALSE 0
+// Define true and false as 1 and 0 to avoid using the stdbool.h library
+#define true 1    //  Macro to map true to 1
+#define false 0   //  Macro to map false to 0
+typedef int bool; // Define bool as an allias for int
 
 /**
  * @brief Initialise service and destroys all stored tuples.

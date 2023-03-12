@@ -10,11 +10,6 @@
 #include <semaphore.h>
 #include <pthread.h>
 
-// Define true and false as 1 and 0 to avoid using the stdbool.h library
-#define true 1    //  Macro to map true to 1
-#define false 0   //  Macro to map false to 0
-typedef int bool; // Define bool as an allias for int
-
 // The wait() and post() semaphores are atomic -> do not assure order
 
 sem_t writer_sem;           // semaphores for readers and writers
