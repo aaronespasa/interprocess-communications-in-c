@@ -15,11 +15,8 @@
 #include "request.h"    /* For request struct */
 #include "response.h"   /* For response struct */
 #include "servidor.h"   /* For server functions */
-#include "LinkedList.h" /* For linked list */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
-
-LinkedList *list;
 
 mqd_t serverQueue;
 mqd_t clientQueue;
@@ -57,7 +54,7 @@ void stopServer(int signum)
     // Unlink the queue
     mq_unlink(MQ_SERVER);
 
-    delete_linked_list(list);
+    // delete_linked_list(list);
 
     exit(signum);
 }
@@ -79,13 +76,13 @@ void deal_with_request(Request *client_request)
     switch (client_request_copy.operacion)
     {
     case init_op:
-        server_response.error_code = list_init(list);
-        list_display_list(list);
+        server_response.error_code = list_init();
+        list_display_list();
         break;
 
     case set_value_op:
-        server_response.error_code = list_set_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3, list);
-        list_display_list(list);
+        server_response.error_code = list_set_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
+        list_display_list();
         break;
 
     case get_value_op:
@@ -93,34 +90,34 @@ void deal_with_request(Request *client_request)
         int *value2response = malloc(sizeof(int));
         double *value3response = malloc(sizeof(double));
 
-        server_response.error_code = list_get_value(client_request_copy.key1, value1response, value2response, value3response, list);
+        server_response.error_code = list_get_value(client_request_copy.key1, value1response, value2response, value3response);
         strcpy(server_response.value1, value1response);
         server_response.value2 = *value2response;
         server_response.value3 = *value3response;
 
         free(value2response);
         free(value3response);
-        list_display_list(list);
+        list_display_list();
         break;
 
     case delete_key_op:
-        server_response.error_code = list_delete_key(client_request_copy.key1, list);
-        list_display_list(list);
+        server_response.error_code = list_delete_key(client_request_copy.key1);
+        list_display_list();
         break;
 
     case modify_value_op:
-        server_response.error_code = list_modify_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3, list);
-        list_display_list(list);
+        server_response.error_code = list_modify_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
+        list_display_list();
         break;
 
     case exist_op:
-        server_response.error_code = list_exist(client_request_copy.key1, list);
-        list_display_list(list);
+        server_response.error_code = list_exist(client_request_copy.key1);
+        list_display_list();
         break;
 
     case copy_key_op:
-        server_response.error_code = list_copy_key(client_request_copy.key1, client_request_copy.key2, list);
-        list_display_list(list);
+        server_response.error_code = list_copy_key(client_request_copy.key1, client_request_copy.key2);
+        list_display_list();
         break;
     }
 
@@ -149,8 +146,6 @@ int main(void)
 {
     // Register the signal handler
     signal(SIGINT, stopServer);
-
-    list = create_linked_list();
 
     // * Open the queue
     clientQueue = mq_open(

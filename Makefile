@@ -17,9 +17,8 @@ all: dir information libclaves cliente proxy
 information:
 	@echo ''
 	@echo "Output files:"
-	@echo "  - proxy.out"
-	@echo "  - cliente.out"
-	@echo "  - libclaves.so"
+	@echo "  - servidor.out"
+	@echo "  - cliente.out (using libclaves.so)"
 	@echo ''
 
 # Create the ./lib directory if it doesn't exist
@@ -28,7 +27,7 @@ dir:
 
 # proxy.c compilation
 proxy: proxy.c servidor.c LinkedList.c
-	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out
+	@$(CC) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o servidor.out
 
 # Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
 libclaves: claves.c
