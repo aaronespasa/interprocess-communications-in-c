@@ -86,8 +86,14 @@ int list_copy_key(int key1, int key2);
 
 /**
  * @brief Display the list.
- * @note This is a READER function.
+ * @note This is a WRITER function.
  */
 int list_display_list();
+
+/**
+ * @brief Display the list.
+ * @note This is a WRITER function.
+ */
+void request_delete_list();
 
 #endif

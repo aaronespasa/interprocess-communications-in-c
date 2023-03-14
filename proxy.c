@@ -54,16 +54,17 @@ void stopServer(int signum)
     // Unlink the queue
     mq_unlink(MQ_SERVER);
 
-    // delete_linked_list(list);
+    request_delete_list();
 
     exit(signum);
 }
 
 void deal_with_request(Request *client_request)
 {
+    Request client_request_copy;
     // * Lock the mutex on the process of request copying
     pthread_mutex_lock(&mutex);
-    Request client_request_copy = *client_request;
+    client_request_copy = *client_request;
     printf("📥 Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
     busy = false;
     pthread_cond_signal(&cond);

@@ -232,4 +232,8 @@ int list_display_list()
 
     return 0;
 }
-  
+
+void request_delete_list()
+{
+    delete_linked_list(list);
+}
