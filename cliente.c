@@ -97,6 +97,9 @@ void test_get_value(int key, unsigned long thread_num)
     {
         printf("(get_value - %lu):     Error (código %d) al obtener el valor de la clave %d\n", thread_num, ret, key);
     }
+
+    free(value2);
+    free(value3);
 }
 
 void test_modify_value(unsigned long thread_num)
@@ -188,6 +191,16 @@ void test_copy_key1(unsigned long thread_num)
     }
 }
 
+// test_modify_value(thread_num);
+// test_delete_key(thread_num);
+// test_exist(thread_num);
+
+// test_set_value(thread_num);
+// test_exist(thread_num);
+// test_copy_key(thread_num);
+
+// test_copy_key1(thread_num);
+
 void call_test(thread_data* th_data)
 {
     pthread_mutex_lock(&protect_init_mutex);
@@ -195,21 +208,12 @@ void call_test(thread_data* th_data)
         test_init();
     }
     pthread_mutex_unlock(&protect_init_mutex);
-
-
+    
     test_set_value(th_data->thread_num);
     test_set_value1(th_data->thread_num);
     test_set_value2(th_data->thread_num);
     test_get_value(2, th_data->thread_num);
-    // test_modify_value(thread_num);
-    // test_delete_key(thread_num);
-    // test_exist(thread_num);
-
-    // test_set_value(thread_num);
-    // test_exist(thread_num);
-    // test_copy_key(thread_num);
-
-    // test_copy_key1(thread_num);
+    printf("📍 %lu finished", th_data->thread_num);
 }
 
 int main()

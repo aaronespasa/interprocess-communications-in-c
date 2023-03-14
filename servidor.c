@@ -216,45 +216,20 @@ int list_copy_key(int key1, int key2)
     return error_code;
 }
 
-void list_display_list()
+int list_display_list()
 {
     // Initialize the semaphore if it is not initialized
     init_sem();
-    // Acquire the reader mutex
-    pthread_mutex_lock(&reader_mut);
 
-    // Increment the reader count
-    reader_count++;
-
-    // If it's the first reader, try to get the write semaphore
-    if (reader_count == 1)
-    {
-        if (sem_trywait(&writer_sem) != 0)
-        {
-            pthread_mutex_unlock(&reader_mut);
-            sem_post(&writer_sem);
-            pthread_exit(NULL);
-        }
-    }
-
-    // Release the reader mutex
-    pthread_mutex_unlock(&reader_mut);
+    // Writer tries to get the write semaphore
+    sem_wait(&writer_sem);
 
     // Display the linked list
     display_list(list);
 
-    // Acquire the reader mutex
-    pthread_mutex_lock(&reader_mut);
+    // Writer releases the write semaphore
+    sem_post(&writer_sem);
 
-    // Decrement the reader count
-    reader_count--;
-
-    // If it's the last reader, release the write semaphore
-    if (reader_count == 0)
-    {
-        sem_post(&writer_sem);
-    }
-
-    // Release the reader mutex
-    pthread_mutex_unlock(&reader_mut);
+    return 0;
 }
+  

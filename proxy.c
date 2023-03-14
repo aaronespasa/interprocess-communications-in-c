@@ -64,14 +64,13 @@ void deal_with_request(Request *client_request)
     // * Lock the mutex on the process of request copying
     pthread_mutex_lock(&mutex);
     Request client_request_copy = *client_request;
+    printf("📥 Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
     busy = false;
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&mutex);
 
     // * Response (message)
     Response server_response;
-
-    printf("Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
 
     switch (client_request_copy.operacion)
     {
@@ -139,7 +138,7 @@ void deal_with_request(Request *client_request)
 
     mq_close(serverQueue); // Close the queue (free resources)
 
-    pthread_exit(NULL); // Exit the thread
+    // pthread_exit(NULL); // Exit the thread
 }
 
 int main(void)

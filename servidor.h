@@ -88,6 +88,6 @@ int list_copy_key(int key1, int key2);
  * @brief Display the list.
  * @note This is a READER function.
  */
-void list_display_list();
+int list_display_list();
 
 #endif
