@@ -12,33 +12,27 @@
 
 // The wait() and post() semaphores are atomic -> do not assure order
 
-sem_t writer_sem;           // semaphores for readers and writers
-pthread_mutex_t reader_mut; // mutex for the reader_count variable
-int reader_count = 0;       // number of readers reading
+sem_t writer_sem;                                       // semaphores for readers and writers
+pthread_mutex_t reader_mut = PTHREAD_MUTEX_INITIALIZER; // mutex for the reader_count variable and its initialization
+int reader_count = 0;                                   // number of readers reading
 bool is_semaphore_initialized = false;
-bool is_mutex_initialized = false;
 
-void initialize_mutex_and_semaphore()
+void init_sem()
 {
-    // Initialize the mutex
-    if (!is_mutex_initialized)
-    {
-        pthread_mutex_init(&reader_mut, NULL);
-        is_mutex_initialized = true;
-    }
-
-    // Initialize the mutex
+    // Initialize the semaphore
+    pthread_mutex_lock(&reader_mut);
     if (!is_semaphore_initialized)
     {
         sem_init(&writer_sem, 0, 1);
         is_semaphore_initialized = true;
     }
+    pthread_mutex_unlock(&reader_mut);
 }
 
 int list_init(LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Writer tries to get the write semaphore
     sem_wait(&writer_sem);
@@ -54,8 +48,8 @@ int list_init(LinkedList *list)
 
 int list_set_value(int key, char *value1, int value2, double value3, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Writer tries to get the write semaphore
     sem_wait(&writer_sem);
@@ -71,8 +65,8 @@ int list_set_value(int key, char *value1, int value2, double value3, LinkedList 
 
 int list_get_value(int key, char *value1, int *value2, double *value3, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
@@ -83,7 +77,12 @@ int list_get_value(int key, char *value1, int *value2, double *value3, LinkedLis
     // If it's the first reader, try to get the write semaphore
     if (reader_count == 1)
     {
-        sem_wait(&writer_sem);
+        if (sem_trywait(&writer_sem) != 0)
+        {
+            pthread_mutex_unlock(&reader_mut);
+            sem_post(&writer_sem);
+            return -1; // return error code indicating that the lock was not acquired
+        }
     }
 
     // Release the reader mutex
@@ -113,8 +112,8 @@ int list_get_value(int key, char *value1, int *value2, double *value3, LinkedLis
 
 int list_modify_value(int key, char *value1, int value2, double value3, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Writer tries to get the write semaphore
     sem_wait(&writer_sem);
@@ -130,8 +129,8 @@ int list_modify_value(int key, char *value1, int value2, double value3, LinkedLi
 
 int list_delete_key(int key, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Writer tries to get the write semaphore
     sem_wait(&writer_sem);
@@ -147,8 +146,8 @@ int list_delete_key(int key, LinkedList *list)
 
 int list_exist(int key, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
@@ -159,7 +158,12 @@ int list_exist(int key, LinkedList *list)
     // If it's the first reader, try to get the write semaphore
     if (reader_count == 1)
     {
-        sem_wait(&writer_sem);
+        if (sem_trywait(&writer_sem) != 0)
+        {
+            pthread_mutex_unlock(&reader_mut);
+            sem_post(&writer_sem);
+            return -1; // return error code indicating that the lock was not acquired
+        }
     }
 
     // Release the reader mutex
@@ -188,8 +192,8 @@ int list_exist(int key, LinkedList *list)
 
 int list_copy_key(int key1, int key2, LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
 
     // Writer tries to get the write semaphore
     sem_wait(&writer_sem);
@@ -205,8 +209,8 @@ int list_copy_key(int key1, int key2, LinkedList *list)
 
 void list_display_list(LinkedList *list)
 {
-    // Initialize the mutex and semaphore if they are not initialized
-    initialize_mutex_and_semaphore();
+    // Initialize the semaphore if it is not initialized
+    init_sem();
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
 
@@ -216,7 +220,12 @@ void list_display_list(LinkedList *list)
     // If it's the first reader, try to get the write semaphore
     if (reader_count == 1)
     {
-        sem_wait(&writer_sem);
+        if (sem_trywait(&writer_sem) != 0)
+        {
+            pthread_mutex_unlock(&reader_mut);
+            sem_post(&writer_sem);
+            pthread_exit(NULL);
+        }
     }
 
     // Release the reader mutex
