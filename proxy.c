@@ -40,7 +40,7 @@ struct mq_attr responseAttributes = {
 // ! Mutex & Condition variables
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-int busy = false;
+int busy = true;
 
 // ! Signal handler
 // Using a signal handler to stop the server, forced to declare and use signum to avoid warnings
