@@ -19,6 +19,9 @@
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 
+#define true 1
+#define false 0
+
 /**
  * @brief Initialise service and destroys all stored tuples.
  * @return 0 if the service was initialised correctly, -1 an error occurred during communication.

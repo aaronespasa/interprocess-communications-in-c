@@ -9,6 +9,8 @@ typedef struct thread_data
 } thread_data;
 
 pthread_mutex_t protect_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t init_finished = PTHREAD_COND_INITIALIZER;
+int busy = true;
 
 void test_init()
 {
@@ -204,16 +206,16 @@ void test_copy_key1(unsigned long thread_num)
 void call_test(thread_data* th_data)
 {
     pthread_mutex_lock(&protect_init_mutex);
-    if(th_data->call_init == true){
+    if (th_data->call_init == true)
         test_init();
-    }
+    busy = false;
+    pthread_cond_signal(&init_finished);
     pthread_mutex_unlock(&protect_init_mutex);
     
     test_set_value(th_data->thread_num);
     test_set_value1(th_data->thread_num);
     test_set_value2(th_data->thread_num);
     test_get_value(2, th_data->thread_num);
-    printf("📍 %lu finished", th_data->thread_num);
 }
 
 int main()
@@ -230,6 +232,13 @@ int main()
         th_data[i].call_init = i == 0 ? true : false; // only the first thread calls init
 
         pthread_create(&thread[i], &attr, (void *)call_test, (void *)&th_data[i]);
+
+        pthread_mutex_lock(&protect_init_mutex);
+        while(busy) {
+            pthread_cond_wait(&init_finished, &protect_init_mutex);
+        }
+        busy = true;
+        pthread_mutex_unlock(&protect_init_mutex);
     }
 
 
