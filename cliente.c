@@ -12,6 +12,8 @@ pthread_mutex_t protect_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t init_finished = PTHREAD_COND_INITIALIZER;
 int busy = true;
 
+thread_data th_data;
+
 void test_init()
 {
     int ret = init();
@@ -205,33 +207,39 @@ void test_copy_key1(unsigned long thread_num)
 
 void call_test(thread_data* th_data)
 {
+    thread_data th_data_copy;
     pthread_mutex_lock(&protect_init_mutex);
+
+    // Make a copy of the data as it will be changed by the next thread
+    th_data_copy = *th_data;
+
+    // Initialize the linked list if this is the first thread
     if (th_data->call_init == true)
         test_init();
+    
     busy = false;
     pthread_cond_signal(&init_finished);
     pthread_mutex_unlock(&protect_init_mutex);
     
-    test_set_value(th_data->thread_num);
-    test_set_value1(th_data->thread_num);
-    test_set_value2(th_data->thread_num);
-    test_get_value(2, th_data->thread_num);
+    test_set_value(th_data_copy.thread_num);
+    test_set_value1(th_data_copy.thread_num);
+    test_set_value2(th_data_copy.thread_num);
+    test_get_value(2, th_data_copy.thread_num);
 }
 
 int main()
 {
     pthread_t thread[NUM_THREADS];
-    thread_data th_data[NUM_THREADS];
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        th_data[i].thread_num = i;
-        th_data[i].call_init = i == 0 ? true : false; // only the first thread calls init
+        th_data.thread_num = i;
+        th_data.call_init = i == 0 ? true : false; // only the first thread calls init
 
-        pthread_create(&thread[i], &attr, (void *)call_test, (void *)&th_data[i]);
+        pthread_create(&thread[i], &attr, (void *)call_test, (void *)&th_data);
 
         pthread_mutex_lock(&protect_init_mutex);
         while(busy) {
