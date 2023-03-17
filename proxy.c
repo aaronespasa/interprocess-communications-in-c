@@ -11,15 +11,13 @@
 #include <stdlib.h>   /* For exit */
 #include <signal.h>   /* For signal */
 #include <string.h>   /* For strlen, strcpy, sprintf */
+#include <unistd.h>   /* For getpid */
 
 #include "request.h"    /* For request struct */
 #include "response.h"   /* For response struct */
 #include "servidor.h"   /* For server functions */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
-
-mqd_t serverQueue;
-mqd_t clientQueue;
 
 // ! Request (Attribute declaration - send)
 struct mq_attr requestAttributes = {
@@ -49,7 +47,7 @@ void stopServer(int signum)
     printf("\n\nClosing the server queue...\n\n");
 
     // Close the queue
-    mq_close(serverQueue);
+    // mq_close(serverQueue);
 
     // Unlink the queue
     mq_unlink(MQ_SERVER);
@@ -122,7 +120,7 @@ void deal_with_request(Request *client_request)
     }
 
     // * Open the queue
-    serverQueue = mq_open(
+    mqd_t serverQueue = mq_open(
         client_request_copy.clientPID, // Queue name
         O_CREAT | O_WRONLY,        // Open flags (O_WRONLY for sender)
         S_IRUSR | S_IWUSR,         // User read/write permission
@@ -136,23 +134,13 @@ void deal_with_request(Request *client_request)
         0);                       // Message priority (not used)
 
     // printf("Response created");
-
     mq_close(serverQueue); // Close the queue (free resources)
-
-    // pthread_exit(NULL); // Exit the thread
 }
 
 int main(void)
 {
     // Register the signal handler
     signal(SIGINT, stopServer);
-
-    // * Open the queue
-    clientQueue = mq_open(
-        MQ_SERVER,           // Queue name
-        O_CREAT | O_RDONLY,  // Open flags (O_RDONLY for receiver)
-        S_IRUSR | S_IWUSR,   // User read/write permission
-        &requestAttributes); // Assign queue attributes
 
     printf("\nServer live");
     printf("\nWaiting for messages...\n\n");
@@ -172,6 +160,13 @@ int main(void)
     // of messages sent/set of messages received and so we dont have to force break the loop
     while (1)
     {
+        // * Open the queue
+        mqd_t clientQueue = mq_open(
+            MQ_SERVER,           // Queue name
+            O_CREAT | O_RDONLY,  // Open flags (O_RDONLY for receiver)
+            S_IRUSR | S_IWUSR,   // User read/write permission
+            &requestAttributes); // Assign queue attributes
+
         // * Request (message)
         Request client_request;
 
@@ -197,6 +192,13 @@ int main(void)
         pthread_mutex_unlock(&mutex); // Unlock the mutex
 
         // printf(" -> Response sent!\n\n");
+        
+        // * Close the queue
+        if(mq_close(clientQueue) == -1) // Close the queue (free resources)
+        {
+            // send signal sigint
+            kill(getpid(), SIGINT);
+        }
     }
 
     return 0;

@@ -14,17 +14,17 @@ int busy = true;
 
 thread_data th_data;
 
-void test_init()
+void test_init(unsigned long thread_num)
 {
     int ret = init();
 
     if (ret == 0)
     {
-        printf("(    init     ):     Se inicializó satisfactoriamente la lista\n");
+        printf("(init      - %lu):     Se inicializó satisfactoriamente la lista\n", thread_num);
     }
     else
     {
-        printf("(    init     ):     Error (código %d) al inicializar la lista\n", ret);
+        printf("(init      - %lu):     Error (código %d) al inicializar la lista\n", thread_num, ret);
     }
 }
 
@@ -215,7 +215,7 @@ void call_test(thread_data* th_data)
 
     // Initialize the linked list if this is the first thread
     if (th_data->call_init == true)
-        test_init();
+        test_init(th_data_copy.thread_num);
     
     busy = false;
     pthread_cond_signal(&init_finished);
@@ -251,9 +251,7 @@ int main()
 
 
     for (int i = 0; i < NUM_THREADS; i++)
-    {
         pthread_join(thread[i], NULL);
-    }
 
     pthread_attr_destroy(&attr);
 
