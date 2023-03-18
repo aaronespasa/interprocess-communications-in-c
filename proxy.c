@@ -46,9 +46,6 @@ void stopServer(int signum)
 {
     printf("\n\nClosing the server queue...\n\n");
 
-    // Close the queue
-    // mq_close(serverQueue);
-
     // Unlink the queue
     mq_unlink(MQ_SERVER);
 
@@ -75,12 +72,12 @@ void deal_with_request(Request *client_request)
     {
     case init_op:
         server_response.error_code = list_init();
-        list_display_list();
+        // list_display_list();
         break;
 
     case set_value_op:
         server_response.error_code = list_set_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
-        list_display_list();
+        // list_display_list();
         break;
 
     case get_value_op:
@@ -95,27 +92,27 @@ void deal_with_request(Request *client_request)
 
         free(value2response);
         free(value3response);
-        list_display_list();
+        // list_display_list();
         break;
 
     case delete_key_op:
         server_response.error_code = list_delete_key(client_request_copy.key1);
-        list_display_list();
+        // list_display_list();
         break;
 
     case modify_value_op:
         server_response.error_code = list_modify_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
-        list_display_list();
+        // list_display_list();
         break;
 
     case exist_op:
         server_response.error_code = list_exist(client_request_copy.key1);
-        list_display_list();
+        // list_display_list();
         break;
 
     case copy_key_op:
         server_response.error_code = list_copy_key(client_request_copy.key1, client_request_copy.key2);
-        list_display_list();
+        // list_display_list();
         break;
     }
 

@@ -4,7 +4,6 @@
  */
 
 #include "servidor.h"
-#include "LinkedList.h"
 
 // We'll use semaphores to control the access as readers/writers
 #include <semaphore.h>

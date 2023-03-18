@@ -145,6 +145,8 @@ int init()
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
 
+	mq_unlink(client_qr_name);
+
 	return server_response.error_code;
 }
 
@@ -196,6 +198,8 @@ int set_value(int key, char *value1, int value2, double value3)
 	// * Close the client queue
 	if(mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
+
+	mq_unlink(client_qr_name);
 
 	return server_response.error_code;
 }
@@ -254,6 +258,8 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
 
+	mq_unlink(client_qr_name);
+
 	return server_response.error_code;
 }
 
@@ -306,6 +312,8 @@ int modify_value(int key, char *value1, int value2, double value3)
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
 
+	mq_unlink(client_qr_name);
+
 	return server_response.error_code;
 }
 
@@ -350,6 +358,8 @@ int delete_key(int key)
 	// * Close the client queue
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
+
+	mq_unlink(client_qr_name);
 
 	return server_response.error_code;
 }
@@ -396,6 +406,8 @@ int exist(int key)
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
 
+	mq_unlink(client_qr_name);
+
 	return server_response.error_code;
 }
 
@@ -440,6 +452,8 @@ int copy_key(int key1, int key2)
 	// * Close the client queue
 	if (mq_close(clientQueue) == -1)
 		return -1; // return -1 if the queue was not closed
+
+	mq_unlink(client_qr_name);
 
 	return server_response.error_code;
 }
