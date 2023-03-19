@@ -66,7 +66,7 @@ void deal_with_request(Request *client_request)
     pthread_mutex_unlock(&mutex);
 
     // * Response (message)
-    Response server_response;
+    Response server_response = {0}; // Initialize the response to avoid garbage values
 
     switch (client_request_copy.operacion)
     {
