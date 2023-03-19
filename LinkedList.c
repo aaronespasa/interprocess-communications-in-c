@@ -154,13 +154,13 @@ int init(LinkedList *list)
 
 int set_value(LinkedList *list, int key, char *value1, int value2, double value3)
 {
-  Entry *entry = create_entry(key, value1, value2, value3);
-
   if (exist(list, key) == 1)
   {
     perror("\nThe provided key already exists");
     return -1;
   }
+
+  Entry *entry = create_entry(key, value1, value2, value3);
 
   // If the list is empty, insert the entry at the head.
   if (list->head == NULL)
