@@ -9,7 +9,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 
-LinkedList *list;
+LinkedList *list = NULL;
 
 // The wait() and post() semaphores are atomic -> do not assure order
 
@@ -23,16 +23,16 @@ void init_sem()
 {
     // Initialize the semaphore
     pthread_mutex_lock(&reader_mut);
-    if (!is_semaphore_initialized)
-    {
-        sem_init(&writer_sem, 0, 1);
-        is_semaphore_initialized = true;
-    }
-
     if (!is_list_created)
     {
         list = create_linked_list();
         is_list_created = true;
+    }
+
+    if (!is_semaphore_initialized)
+    {
+        sem_init(&writer_sem, 0, 1);
+        is_semaphore_initialized = true;
     }
     pthread_mutex_unlock(&reader_mut);
 }
