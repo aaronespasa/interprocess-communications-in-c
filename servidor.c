@@ -16,8 +16,8 @@ LinkedList *list;
 sem_t writer_sem;                                       // semaphores for readers and writers
 pthread_mutex_t reader_mut = PTHREAD_MUTEX_INITIALIZER; // mutex for the reader_count variable and its initialization
 int reader_count = 0;                                   // number of readers reading
-bool is_semaphore_initialized = false;
-bool is_list_created = false;
+bool is_semaphore_initialized = false;                  // semaphore initialization flag
+bool is_list_created = false;                           // linked list creation flag
 
 void init_sem()
 {

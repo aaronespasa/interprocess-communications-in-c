@@ -8,8 +8,8 @@
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // the following two variables are used to print the client queue name only once
-// int num_of_clients_printed = 0;
-// char client_names[NUM_THREADS][32];
+int num_of_clients_printed = 0;
+char client_names[NUM_THREADS][32];
 
 // ! Request (Attribute declaration - send)
 struct mq_attr requestAttributes = {
@@ -40,38 +40,38 @@ int value1_length(char *value)
 	return 0;
 }
 
-// void print_client_queue_name()
-// {
-// 	char client_qr_name[32];
-// 	get_mq_client_name(client_qr_name);
+void print_client_queue_name()
+{
+	char client_qr_name[32];
+	get_mq_client_name(client_qr_name);
 
-// 	pthread_mutex_lock(&mutex);
-// 	// check if client_qr_name is in client_names
-// 	int client_qr_name_in_client_names = 0;
-// 	for (int i = 0; i < NUM_THREADS; i++)
-// 	{
-// 		if (strcmp(client_names[i], client_qr_name) == 0)
-// 		{
-// 			client_qr_name_in_client_names = 1;
-// 			break;
-// 		}
-// 	}
+	pthread_mutex_lock(&mutex);
+	// check if client_qr_name is in client_names
+	int client_qr_name_in_client_names = 0;
+	for (int i = 0; i < NUM_THREADS; i++)
+	{
+		if (strcmp(client_names[i], client_qr_name) == 0)
+		{
+			client_qr_name_in_client_names = 1;
+			break;
+		}
+	}
 
-// 	if (num_of_clients_printed < NUM_THREADS && client_qr_name_in_client_names == 0)
-// 	{
-// 		printf("\nClient queue name: %s\n\n", client_qr_name);
-// 		strcpy(client_names[num_of_clients_printed], client_qr_name);
-// 		num_of_clients_printed++;
-// 	}
+	if (num_of_clients_printed < NUM_THREADS && client_qr_name_in_client_names == 0)
+	{
+		printf("\nClient queue name: %s\n\n", client_qr_name);
+		strcpy(client_names[num_of_clients_printed], client_qr_name);
+		num_of_clients_printed++;
+	}
 
-// 	pthread_mutex_unlock(&mutex);
-// }
+	pthread_mutex_unlock(&mutex);
+}
 
 int open_queues(mqd_t* serverQueue, mqd_t* clientQueue)
 {
 	char client_qr_name[32];
 	get_mq_client_name(client_qr_name);
-	// print_client_queue_name();
+	print_client_queue_name();
 	
 
 	// * Create the queue
