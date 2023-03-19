@@ -85,6 +85,10 @@ void deal_with_request(Request *client_request)
         int *value2response = malloc(sizeof(int));
         double *value3response = malloc(sizeof(double));
 
+        // Initialize the memory pointed by value2response and value3response to avoid garbage values
+        *value2response = 0;
+        *value3response = 0.0;
+
         server_response.error_code = list_get_value(client_request_copy.key1, value1response, value2response, value3response);
         strcpy(server_response.value1, value1response);
         server_response.value2 = *value2response;
