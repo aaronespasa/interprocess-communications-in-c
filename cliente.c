@@ -48,6 +48,10 @@ void test_get_value(int key, unsigned long thread_num)
     int *value2 = malloc(sizeof(int));
     double *value3 = malloc(sizeof(double));
 
+    // initialize values
+    *value2 = 0;
+    *value3 = 0.0;
+
     int ret = get_value(key, value1, value2, value3);
 
     if (ret == 0)

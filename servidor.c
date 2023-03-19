@@ -97,9 +97,16 @@ int list_get_value(int key, char *value1, int *value2, double *value3)
     pthread_mutex_unlock(&reader_mut);
 
     // Get request from the linked list
-    int error_code = get_value(list, key, value1, value2, value3);
-    printf("\nLa Key %d existe y se han obtenido sus valores: %s, %d y %f\n", key, value1, *value2, *value3);
-
+    int error_code = -1;
+    if (list != NULL)
+    {
+        error_code = get_value(list, key, value1, value2, value3);
+        printf("\nLa Key %d existe y se han obtenido sus valores: %s, %d y %f\n", key, value1, *value2, *value3);
+    }
+    else
+    {
+        error_code = -1;
+    }
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
 
@@ -234,5 +241,9 @@ int list_display_list()
 
 void request_delete_list()
 {
+    if (list == NULL)
+    {
+        return;
+    }
     delete_linked_list(list);
 }

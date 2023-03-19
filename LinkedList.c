@@ -209,13 +209,6 @@ int get_value(LinkedList *list, int key, char *value1, int *value2, double *valu
     return -1;
   }
 
-  // Comprobamos que el puntero de list no es NULL
-  if (list == NULL)
-  {
-    perror("\nThe list pointer is NULL!");
-    return -1;
-  }
-
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
   if (value1 == NULL || value2 == NULL || value3 == NULL)
   {
