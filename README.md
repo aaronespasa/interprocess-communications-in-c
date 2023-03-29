@@ -1,4 +1,4 @@
-# ejercicio1-arquitectura
+# Ejercicio2-SocketsTCP
 
 ## Comandos de compilación
 
