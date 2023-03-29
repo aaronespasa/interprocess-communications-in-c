@@ -1,4 +1,4 @@
-# ejercicio1-arquitectura
+# Ejercicio1-ColasDeMensajes
 
 ## Comandos de compilación
 
