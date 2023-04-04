@@ -24,7 +24,7 @@ P.D: perdón por usar comentarios bonitos, si no los puedes ver, :sad:
 ### TODO's
 
 - TODO: estandarizar los comentarios entre los archivos servidor.c y cliente.c
-- TODO: había intentado hacer char i=0; while(i!=-1) y así poder devolver la response  "ACK%d" pero es una movida y habría que importar otras librerías (no sé si se puede), asique lo dejé con while(1).
+- TODO: había inten-tado hacer char i=0; while(i!=-1) y así poder devolver la response  "ACK%d" pero es una movida y habría que importar otras librerías (no sé si se puede), asique lo dejé con while(1).
 
 - TODO: hacer un makefile para compilar todo de una vez
 - TODO: hacer proxy y claves.c

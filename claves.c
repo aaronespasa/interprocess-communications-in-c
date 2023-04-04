@@ -27,6 +27,40 @@ struct mq_attr responseAttributes = {
 	.mq_curmsgs = 0,				// # of messages currently in queue
 };
 
+char* get_ip_tuplas()
+{
+	char* ip_tuplas = getenv("IP_TUPLAS");
+	if (ip_tuplas == NULL)
+	{
+		printf("Error: IP_TUPLAS environment variable not set\n");
+		exit(1);
+	}
+
+	printf("IP_TUPLAS: %s\n", ip_tuplas);
+	return ip_tuplas;
+}
+
+int get_port_tuplas()
+{
+	char* port_tuplas = getenv("PORT_TUPLAS");
+	char *end;
+	if (port_tuplas == NULL)
+	{
+		printf("Error: PORT_TUPLAS environment variable not set\n");
+		exit(1);
+	}
+
+	int port_tuplas_int = strtol(port_tuplas, &end, 10);
+	if (*end != '\0')
+	{
+		printf("Error: PORT_TUPLAS environment variable is not a number\n");
+		exit(1);
+	}
+
+	printf("PORT_TUPLAS: %d\n", port_tuplas_int);
+	return port_tuplas_int;
+}
+
 void get_mq_client_name(char *qr_client_name)
 {
 	sprintf(qr_client_name, "/mq_client_%lu", pthread_self());
@@ -63,6 +97,13 @@ void print_client_queue_name()
 		strcpy(client_names[num_of_clients_printed], client_qr_name);
 		num_of_clients_printed++;
 	}
+
+	// print ip tuplas and port tuplas
+	// if (num_of_clients_printed == NUM_THREADS)
+	// {
+	// 	printf("IP_TUPLAS: %s\n", get_ip_tuplas());
+	// 	printf("PORT_TUPLAS: %d\n", get_port_tuplas());
+	// }
 
 	pthread_mutex_unlock(&mutex);
 }

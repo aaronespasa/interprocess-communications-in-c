@@ -4,36 +4,24 @@
  */
 
 // ! Libraries declaration
-#include <fcntl.h>    /* For O_* constants */
-#include <sys/stat.h> /* For mode constants */
-#include <mqueue.h>   /* For message queue */
-#include <stdio.h>    /* For printf */
-#include <stdlib.h>   /* For exit */
-#include <signal.h>   /* For signal */
-#include <string.h>   /* For strlen, strcpy, sprintf */
-#include <unistd.h>   /* For getpid */
+#include <fcntl.h>      /* For O_* constants */
+#include <sys/stat.h>   /* For mode constants */
+#include <sys/socket.h> /* For socket(), connect(), send(), and recv() */
+#include <netinet/in.h> /* For sockaddr_in and inet_addr() */
+#include <stdio.h>      /* For printf */
+#include <stdlib.h>     /* For exit */
+#include <signal.h>     /* For signal */
+#include <string.h>     /* For strlen, strcpy, sprintf */
+#include <unistd.h>     /* For getpid */
 
-#include "request.h"    /* For request struct */
-#include "response.h"   /* For response struct */
-#include "servidor.h"   /* For server functions */
+#include "request.h"  /* For request struct */
+#include "response.h" /* For response struct */
+#include "servidor.h" /* For server functions */
+#include "lines.h"    /* For reading the lines send from a socket */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 
-// ! Request (Attribute declaration - send)
-struct mq_attr requestAttributes = {
-    .mq_flags = 0,                 // Flags (ignored for mq_open())
-    .mq_maxmsg = 10,               // Max. # of messages on queue
-    .mq_msgsize = sizeof(Request), // Max. message size (bytes)
-    .mq_curmsgs = 0,               // # of messages currently in queue
-};
-
-// ! Response (Attribute declaration - receive)
-struct mq_attr responseAttributes = {
-    .mq_flags = 0,                  // Flags (ignored for mq_open())
-    .mq_maxmsg = 1,                 // Max. # of messages on queue (only 1 response)
-    .mq_msgsize = sizeof(Response), // Max. message size (bytes)
-    .mq_curmsgs = 0,                // # of messages currently in queue
-};
+#define MAX_LINE 256
 
 // ! Mutex & Condition variables
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -54,92 +42,235 @@ void stopServer(int signum)
     exit(signum);
 }
 
-void deal_with_request(Request *client_request)
+/**
+ * @brief Create the socket
+ *
+ * @param port
+ * @return int
+ */
+int create_socket(int port)
 {
-    Request client_request_copy;
+    int sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sd == -1)
+    {
+        perror("Error creating the socket");
+        exit(1);
+    }
+
+    // ! Socket options
+    int optval = 1;
+    if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) == -1)
+    {
+        perror("Error setting socket options");
+        exit(1);
+    }
+
+    // ! Bind the socket
+    struct sockaddr_in server_addr = {0};
+    bzero((char *)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
+    {
+        perror("Error binding the socket");
+        exit(1);
+    }
+
+    // ! Listen for connections
+    if (listen(sd, SOMAXCONN) == -1)
+    {
+        perror("Error listening for connections");
+        exit(1);
+    }
+
+    return sd;
+}
+
+Parameters get_parameters(int client_sd, int operation_code) {
+    int num_parameters = OPERATION_PARAMS[operation_code];
+
+    Parameters parameters;
+
+    if(strcmp(OPERATION_NAMES[operation_code], "copy_key") == 0) {
+        char buffer[MAX_LINE] = "";
+        readLine(client_sd, buffer, MAX_LINE);
+        parameters.key1 = atoi(buffer);
+        readLine(client_sd, buffer, MAX_LINE);
+        parameters.key2 = atoi(buffer);
+    } else {
+        char buffer[MAX_LINE] = "";
+        for (int i = 0; i < num_parameters; i++)
+        {
+            readLine(client_sd, buffer, MAX_LINE);
+            switch (i)
+            {
+            case 0:
+                parameters.key1 = atoi(buffer);
+                break;
+            case 1:
+                strcpy(parameters.value1, buffer);
+                break;
+            case 2:
+                parameters.value2 = atoi(buffer);
+                break;
+            case 3:
+                parameters.value3 = atof(buffer);
+                break;
+            }
+        }
+    }
+
+    return parameters;
+}
+
+int connect_to_client(int sd)
+{
+    struct sockaddr_in client_addr = {0};
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    int client_sd = accept(sd, (struct sockaddr *)&client_addr, &client_addr_len);
+    if (client_sd == -1)
+    {
+        perror("Error accepting the connection");
+        exit(1);
+    }
+
+    return client_sd;
+}
+
+void deal_with_request(Request* client_request)
+{
+    char value1response[256] = "";
+    int *value2response = malloc(sizeof(int));
+    double *value3response = malloc(sizeof(double));
+
+    int operation_code_copy = 0;
+    int client_sd = 0;
+
     // * Lock the mutex on the process of request copying
     pthread_mutex_lock(&mutex);
-    client_request_copy = *client_request;
-    printf("📥 Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
+    operation_code_copy = client_request->operation_code;
+    client_sd = client_request->socket;
+    // printf("📥 Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
     busy = false;
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&mutex);
 
     // * Response (message)
-    Response server_response = {0}; // Initialize the response to avoid garbage values
+    int error_code = -1;
 
-    switch (client_request_copy.operacion)
+    switch (operation_code_copy)
     {
     case init_op:
-        server_response.error_code = list_init();
+        error_code = list_init();
         // list_display_list();
         break;
 
     case set_value_op:
-        server_response.error_code = list_set_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        error_code = list_set_value(parameters.key1, parameters.value1, parameters.value2, parameters.value3);
         // list_display_list();
         break;
 
     case get_value_op:
-        char value1response[256] = "";
-        int *value2response = malloc(sizeof(int));
-        double *value3response = malloc(sizeof(double));
-
         // Initialize the memory pointed by value2response and value3response to avoid garbage values
         *value2response = 0;
         *value3response = 0.0;
 
-        server_response.error_code = list_get_value(client_request_copy.key1, value1response, value2response, value3response);
-        strcpy(server_response.value1, value1response);
-        server_response.value2 = *value2response;
-        server_response.value3 = *value3response;
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
 
-        free(value2response);
-        free(value3response);
+        error_code = list_get_value(parameters.key1, value1response, value2response, value3response);
         // list_display_list();
         break;
 
     case delete_key_op:
-        server_response.error_code = list_delete_key(client_request_copy.key1);
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        error_code = list_delete_key(parameters.key1);
         // list_display_list();
         break;
 
     case modify_value_op:
-        server_response.error_code = list_modify_value(client_request_copy.key1, client_request_copy.value1, client_request_copy.value2, client_request_copy.value3);
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        error_code = list_modify_value(parameters.key1, parameters.value1, parameters.value2, parameters.value3);
         // list_display_list();
         break;
 
     case exist_op:
-        server_response.error_code = list_exist(client_request_copy.key1);
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        error_code = list_exist(parameters.key1);
         // list_display_list();
         break;
 
     case copy_key_op:
-        server_response.error_code = list_copy_key(client_request_copy.key1, client_request_copy.key2);
+        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        error_code = list_copy_key(parameters.key1, parameters.key2);
         // list_display_list();
         break;
     }
 
-    // * Open the queue
-    mqd_t serverQueue = mq_open(
-        client_request_copy.clientPID, // Queue name
-        O_CREAT | O_WRONLY,        // Open flags (O_WRONLY for sender)
-        S_IRUSR | S_IWUSR,         // User read/write permission
-        &responseAttributes);      // Assign queue attributes
+    // connect to the client to return the error code
+    int socket = connect_to_client(client_sd);
+    // send an integer value to the client
+    write(socket, &error_code, sizeof(int));
+    
+    if(strcmp(OPERATION_NAMES[operation_code_copy], "get_value") == 0 && error_code == 0) {
+        // send the value1response
+        sendMessage(socket, value1response, strlen(value1response) + 1);
+        // send the value2response
+        write(socket, value2response, sizeof(int));
+        // send the value3response
+        write(socket, value3response, sizeof(double));
+    }
 
-    // * Send the message
-    mq_send(
-        serverQueue,              // Queue descriptor
-        (char *)&server_response, // Message buffer (cast to char* for POSIX)
-        sizeof(Response),         // Message size
-        0);                       // Message priority (not used)
 
-    // printf("Response created");
-    mq_close(serverQueue); // Close the queue (free resources)
+    free(value2response);
+    free(value3response);
 }
 
-int main(void)
+/**
+ * @brief Get the port number from the user
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
+int process_port(int argc, char *argv[])
 {
+    char *end;
+
+    if (argc != 2)
+    {
+        printf("Usage: %s <port>\n", argv[0]);
+        exit(1);
+    }
+
+    // Now we are sure that the user has only entered the port
+    // -> Let's check if it's an integer and then convert it to int
+    int port = (int)strtol(argv[1], &end, 10);
+
+    if (*end != '\0')
+    {
+        printf("Invalid port number format: %s\n", argv[1]);
+        exit(1);
+    }
+
+    if (port < 1024 || port > 65535)
+    {
+        printf("Invalid port number: %d\n", port);
+        exit(1);
+    }
+
+    return port;
+}
+
+int main(int argc, char *argv[])
+{
+    int port = process_port(argc, argv);
+    printf("Port: %d\n", port);
+    int sd = create_socket(port);
+
     // Register the signal handler
     signal(SIGINT, stopServer);
 
@@ -161,22 +292,29 @@ int main(void)
     // of messages sent/set of messages received and so we dont have to force break the loop
     while (1)
     {
-        // * Open the queue
-        mqd_t clientQueue = mq_open(
-            MQ_SERVER,           // Queue name
-            O_CREAT | O_RDONLY,  // Open flags (O_RDONLY for receiver)
-            S_IRUSR | S_IWUSR,   // User read/write permission
-            &requestAttributes); // Assign queue attributes
+        // * Open the client socket
+        Request client_request = {0};
+        struct sockaddr_in client_addr = {0};
+        socklen_t client_addr_len = sizeof(client_addr);
+        int client_sd = accept(sd, (struct sockaddr *)&client_addr, &client_addr_len);
+        if (client_sd == -1)
+        {
+            perror("Error opening the client socket");
+            exit(1);
+        }
 
         // * Request (message)
-        Request client_request;
+        int operation_code;
+        ssize_t bytes_read = read(client_sd, &operation_code, sizeof(int));
+        if (bytes_read == -1)
+        {
+            perror("Error reading the request");
+            exit(1);
+        }
 
-        // * Receive the message
-        mq_receive(
-            clientQueue,             // Queue descriptor
-            (char *)&client_request, // Message buffer (cast to char* for POSIX)
-            sizeof(Request),         // Message size
-            NULL);                   // Message priority (not used)
+        // * Create the request
+        client_request.socket = client_sd;
+        client_request.operation_code = operation_code;
 
         // ! We create a thread for each request and execute the function deal_with_request
         pthread_t thread; // create threads to handle the requests as they come in
@@ -193,13 +331,10 @@ int main(void)
         pthread_mutex_unlock(&mutex); // Unlock the mutex
 
         // printf(" -> Response sent!\n\n");
-        
-        // * Close the queue
-        if(mq_close(clientQueue) == -1) // Close the queue (free resources)
-        {
-            // send signal sigint
-            kill(getpid(), SIGINT);
-        }
+
+        // * Close the socket
+        close(client_sd);
+
     }
 
     return 0;
