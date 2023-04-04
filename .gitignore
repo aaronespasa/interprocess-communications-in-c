@@ -54,3 +54,7 @@ dkms.conf
 # Visual Studio code properties and settings
 .vscode/
 .vscode/*
+
+# Output files\
+cliente
+servidor

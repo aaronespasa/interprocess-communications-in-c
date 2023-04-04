@@ -18,8 +18,8 @@ all: dir information libclaves cliente proxy
 information:
 	@echo ''
 	@echo "Output files:"
-	@echo "  - servidor.out"
-	@echo "  - cliente.out (using libclaves.so)"
+	@echo "  - servidor"
+	@echo "  - cliente (using libclaves.so)"
 	@echo ''
 
 # Create the ./lib directory if it doesn't exist
@@ -27,19 +27,18 @@ dir:
 	$(shell mkdir -p lib)
 
 # proxy.c compilation
-proxy: proxy.c servidor.c LinkedList.c
-	@$(call get_compiler, $(shell hostname)) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o servidor.out
+proxy: proxy.c lines.c servidor.c LinkedList.c
+	@$(call get_compiler, $(shell hostname)) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) $^ -o servidor
 
 # Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
 libclaves: claves.c
 	@$(call get_compiler, $(shell hostname)) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o ./lib/$@.so
 
 # Client compilation
-cliente: cliente.c
-	@$(call get_compiler, $(shell hostname)) $(CPPFLAGS) $(LDLIBS) $^ -o $@.out -L./lib -lclaves -Wl,-rpath=./lib
+cliente: cliente.c lines.c
+	@$(call get_compiler, $(shell hostname)) $(CPPFLAGS) $(LDLIBS) $^ -o $@ -L./lib -lclaves -Wl,-rpath=./lib
 
 # Clean all files
 clean:
 	@rm -f *.o *.out *.so ./lib/*.so -d ./lib
-	@if [ ! -z "$(shell ls -A /dev/mqueue)" ]; then rm /dev/mqueue/*; fi
 	@echo -e '\n'"All files removed"'\n'

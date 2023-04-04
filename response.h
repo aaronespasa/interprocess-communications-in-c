@@ -1,5 +1,5 @@
 /*
- * request.h file - structure of the request
+ * response.h file - structure of the response
  * Authors: 100451339 & 100451170
  */
 

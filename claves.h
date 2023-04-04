@@ -4,7 +4,9 @@
 #include <fcntl.h>    /* For O_* constants */
 #include <sys/stat.h> /* For mode constants */
 #include <sys/types.h> /* For mode constants */
-#include <mqueue.h> /* For message queue */
+#include <sys/socket.h> /* For socket, bind, listen, accept */
+#include <netinet/in.h> /* For sockaddr_in */
+#include <arpa/inet.h>
 #include <string.h> /* For strlen, strcpy, sprintf */
 #include <unistd.h> /* For sleep */
 #include <pthread.h> /* For threads */
@@ -14,8 +16,9 @@
 
 #include "request.h"  /* For request struct */
 #include "response.h" /* For response struct */
+#include "lines.h" /* For line functions */
 
-#define NUM_THREADS 2 /* Number of threads */
+#define NUM_THREADS 1 /* Number of threads */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 

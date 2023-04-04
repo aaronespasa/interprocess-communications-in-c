@@ -8,6 +8,7 @@
 #include <sys/stat.h>   /* For mode constants */
 #include <sys/socket.h> /* For socket(), connect(), send(), and recv() */
 #include <netinet/in.h> /* For sockaddr_in and inet_addr() */
+#include <arpa/inet.h>  /* For inet_addr() */
 #include <stdio.h>      /* For printf */
 #include <stdlib.h>     /* For exit */
 #include <signal.h>     /* For signal */
@@ -18,8 +19,6 @@
 #include "response.h" /* For response struct */
 #include "servidor.h" /* For server functions */
 #include "lines.h"    /* For reading the lines send from a socket */
-
-#define MQ_SERVER "/mq_server" /* Queue name */
 
 #define MAX_LINE 256
 
@@ -35,7 +34,7 @@ void stopServer(int signum)
     printf("\n\nClosing the server queue...\n\n");
 
     // Unlink the queue
-    mq_unlink(MQ_SERVER);
+    // mq_unlink(MQ_SERVER);
 
     request_delete_list();
 
@@ -88,35 +87,88 @@ int create_socket(int port)
     return sd;
 }
 
+int read_int(int sd)
+{
+    int int_value = -2;
+
+    ssize_t bytes_read = read(sd, &int_value, sizeof(int));
+    if (bytes_read == -1)
+    {
+        perror("Error reading the integer value");
+        exit(1);
+    }
+
+    return int_value;
+}
+
+double read_double(int sd)
+{
+    double double_value = -2;
+
+    ssize_t bytes_read = read(sd, &double_value, sizeof(double));
+    if (bytes_read == -1)
+    {
+        perror("Error reading the double value");
+        exit(1);
+    }
+
+    return double_value;
+}
+
+void send_int(int sd, int int_value)
+{
+	if (send(sd, &int_value, sizeof(int), 0) == -1)
+	{
+		printf("Error sending integer value to the server\n");
+		exit(1);
+	}
+}
+
+void send_double(int sd, double double_value)
+{
+	if (send(sd, &double_value, sizeof(double), 0) == -1)
+	{
+		printf("Error sending double value to the server\n");
+		exit(1);
+	}
+}
+
+void send_string(int sd, char* string)
+{
+	int len = strlen(string) + 1;
+
+	if ((sendMessage(sd, string, len)) == -1)
+	{
+		printf("Error sending string to the server\n");
+		exit(1);
+	}
+}
+
+
 Parameters get_parameters(int client_sd, int operation_code) {
     int num_parameters = OPERATION_PARAMS[operation_code];
 
     Parameters parameters;
 
     if(strcmp(OPERATION_NAMES[operation_code], "copy_key") == 0) {
-        char buffer[MAX_LINE] = "";
-        readLine(client_sd, buffer, MAX_LINE);
-        parameters.key1 = atoi(buffer);
-        readLine(client_sd, buffer, MAX_LINE);
-        parameters.key2 = atoi(buffer);
+        parameters.key1 = read_int(client_sd);
+        parameters.key2 = read_int(client_sd);
     } else {
-        char buffer[MAX_LINE] = "";
         for (int i = 0; i < num_parameters; i++)
         {
-            readLine(client_sd, buffer, MAX_LINE);
             switch (i)
             {
             case 0:
-                parameters.key1 = atoi(buffer);
+                parameters.key1 = read_int(client_sd);
                 break;
             case 1:
-                strcpy(parameters.value1, buffer);
+                readLine(client_sd, parameters.value1, MAX_LINE);
                 break;
             case 2:
-                parameters.value2 = atoi(buffer);
+                parameters.value2 = read_int(client_sd);
                 break;
             case 3:
-                parameters.value3 = atof(buffer);
+                parameters.value3 = read_double(client_sd);
                 break;
             }
         }
@@ -125,34 +177,34 @@ Parameters get_parameters(int client_sd, int operation_code) {
     return parameters;
 }
 
-int connect_to_client(int sd)
-{
-    struct sockaddr_in client_addr = {0};
-    socklen_t client_addr_len = sizeof(client_addr);
-
-    int client_sd = accept(sd, (struct sockaddr *)&client_addr, &client_addr_len);
-    if (client_sd == -1)
-    {
-        perror("Error accepting the connection");
-        exit(1);
-    }
-
-    return client_sd;
-}
-
 void deal_with_request(Request* client_request)
 {
     char value1response[256] = "";
     int *value2response = malloc(sizeof(int));
     double *value3response = malloc(sizeof(double));
 
+    Parameters parameters = {0};
+
     int operation_code_copy = 0;
     int client_sd = 0;
+    // char client_IP[32] = "";
+    // int client_port = 0;
+    // struct sockaddr_in client_addr = {0};
+    // socklen_t client_addr_len = sizeof(client_addr);
 
     // * Lock the mutex on the process of request copying
     pthread_mutex_lock(&mutex);
     operation_code_copy = client_request->operation_code;
     client_sd = client_request->socket;
+
+    // // get the client IP and port
+    // getpeername(client_sd, (struct sockaddr *)&client_addr, &client_addr_len);
+    // strcpy(client_IP, inet_ntoa(client_addr.sin_addr));
+    // client_port = ntohs(client_addr.sin_port);
+
+    // // print the client IP and port
+    // printf("IP: %s, Port: %d\n", client_IP, client_port);
+
     // printf("📥 Message Received -> Executing \"%s\" by %s:\n", OPERATION_NAMES[client_request_copy.operacion], client_request_copy.clientPID);
     busy = false;
     pthread_cond_signal(&cond);
@@ -169,7 +221,7 @@ void deal_with_request(Request* client_request)
         break;
 
     case set_value_op:
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
         error_code = list_set_value(parameters.key1, parameters.value1, parameters.value2, parameters.value3);
         // list_display_list();
         break;
@@ -179,51 +231,56 @@ void deal_with_request(Request* client_request)
         *value2response = 0;
         *value3response = 0.0;
 
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
 
         error_code = list_get_value(parameters.key1, value1response, value2response, value3response);
         // list_display_list();
         break;
 
     case delete_key_op:
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
         error_code = list_delete_key(parameters.key1);
         // list_display_list();
         break;
 
     case modify_value_op:
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
         error_code = list_modify_value(parameters.key1, parameters.value1, parameters.value2, parameters.value3);
         // list_display_list();
         break;
 
     case exist_op:
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
         error_code = list_exist(parameters.key1);
         // list_display_list();
         break;
 
     case copy_key_op:
-        Parameters parameters = get_parameters(client_sd, operation_code_copy);
+        parameters = get_parameters(client_sd, operation_code_copy);
         error_code = list_copy_key(parameters.key1, parameters.key2);
         // list_display_list();
         break;
     }
 
-    // connect to the client to return the error code
-    int socket = connect_to_client(client_sd);
-    // send an integer value to the client
-    write(socket, &error_code, sizeof(int));
-    
-    if(strcmp(OPERATION_NAMES[operation_code_copy], "get_value") == 0 && error_code == 0) {
-        // send the value1response
-        sendMessage(socket, value1response, strlen(value1response) + 1);
-        // send the value2response
-        write(socket, value2response, sizeof(int));
-        // send the value3response
-        write(socket, value3response, sizeof(double));
+    // * Send the error code to the client
+    if (send(client_sd, &error_code, sizeof(int), 0) == -1)
+    {
+        printf("Error sending error code to the client\n");
+        printf("Error code: %d\n", error_code);
+        exit(1);
     }
 
+    if(strcmp(OPERATION_NAMES[operation_code_copy], "get_value") == 0 && error_code == 0) {
+        // send the value1response
+        send_string(client_sd, value1response);
+        // send the value2response
+        send_int(client_sd, *value2response);
+        // send the value3response
+        send_double(client_sd, *value3response);
+    }
+
+    // close the socket
+    close(client_sd);
 
     free(value2response);
     free(value3response);
@@ -297,6 +354,7 @@ int main(int argc, char *argv[])
         struct sockaddr_in client_addr = {0};
         socklen_t client_addr_len = sizeof(client_addr);
         int client_sd = accept(sd, (struct sockaddr *)&client_addr, &client_addr_len);
+
         if (client_sd == -1)
         {
             perror("Error opening the client socket");
@@ -331,11 +389,13 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&mutex); // Unlock the mutex
 
         // printf(" -> Response sent!\n\n");
-
-        // * Close the socket
-        close(client_sd);
-
     }
+
+    // ! Destroy the mutex and the condition variable
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
+
+    close(sd);
 
     return 0;
 }
