@@ -15,7 +15,6 @@
   > `rm /dev/mqueue/mq_client_0`
 
 Se ha cambiado el nombre del archivo servidor.h a request.h por ser más descriptivo y seguir con el video.
-Se ha añadido un response.h para no mezclar archivos y que todo quede mas limpio.
 
 Tal vez deberíamos organizar los archivos en carpetas, quedará todo más ordenado.
 

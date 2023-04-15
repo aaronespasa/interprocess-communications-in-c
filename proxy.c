@@ -16,7 +16,6 @@
 #include <unistd.h>     /* For getpid */
 
 #include "request.h"  /* For request struct */
-#include "response.h" /* For response struct */
 #include "servidor.h" /* For server functions */
 #include "lines.h"    /* For reading the lines send from a socket */
 

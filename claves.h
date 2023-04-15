@@ -15,7 +15,6 @@
 #include <stdlib.h> /* For exit */
 
 #include "request.h"  /* For request struct */
-#include "response.h" /* For response struct */
 #include "lines.h" /* For line functions */
 
 #define NUM_THREADS 1 /* Number of threads */
