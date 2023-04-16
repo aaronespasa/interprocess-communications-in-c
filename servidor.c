@@ -101,7 +101,6 @@ int list_get_value(int key, char *value1, int *value2, double *value3)
     if (list != NULL)
     {
         error_code = get_value(list, key, value1, value2, value3);
-        printf("\nLa Key %d existe y se han obtenido sus valores: %s, %d y %f\n", key, value1, *value2, *value3);
     }
     else
     {
