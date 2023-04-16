@@ -17,7 +17,7 @@
 #include "request.h"  /* For request struct */
 #include "lines.h" /* For line functions */
 
-#define NUM_THREADS 1 /* Number of threads */
+#define NUM_THREADS 3 /* Number of threads */
 
 #define MQ_SERVER "/mq_server" /* Queue name */
 

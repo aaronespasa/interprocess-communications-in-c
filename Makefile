@@ -40,5 +40,5 @@ cliente: cliente.c lines.c
 
 # Clean all files
 clean:
-	@rm -f *.o *.out *.so ./lib/*.so -d ./lib
+	@rm -f *.o *.out *.so ./lib/*.so -d ./lib cliente servidor
 	@echo -e '\n'"All files removed"'\n'
