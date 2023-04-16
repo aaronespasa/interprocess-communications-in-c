@@ -2,7 +2,7 @@ CPPFLAGS = -I$(INSTALL_PATH)/include -Wall -Wextra -Werror
 
 LDFLAGS = -L$(INSTALL_PATH)/lib/
 
-LDLIBS = -lpthread -lrt
+LDLIBS = -lpthread
 
 # Adding ./lib directory to the LD_LIBRARY_PATH environment variable and exporting it
 LD_LIBRARY_PATH = $LD_LIBRARY_PATH:./lib
