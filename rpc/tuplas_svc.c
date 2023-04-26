@@ -17,66 +17,66 @@
 #endif
 
 int
-_init_service_1 (void  *argp, void *result, struct svc_req *rqstp)
+_init_1 (void  *argp, void *result, struct svc_req *rqstp)
 {
-	return (init_service_1_svc(result, rqstp));
+	return (init_1_svc(result, rqstp));
 }
 
 int
-_set_tuple_1 (set_tuple_1_argument *argp, void *result, struct svc_req *rqstp)
+_set_value_1 (Value  *argp, void *result, struct svc_req *rqstp)
 {
-	return (set_tuple_1_svc(argp->key, argp->value1, argp->value2, argp->value3, result, rqstp));
+	return (set_value_1_svc(*argp, result, rqstp));
 }
 
 int
-_get_tuple_1 (int  *argp, void *result, struct svc_req *rqstp)
+_get_value_1 (int  *argp, void *result, struct svc_req *rqstp)
 {
-	return (get_tuple_1_svc(*argp, result, rqstp));
+	return (get_value_1_svc(*argp, result, rqstp));
 }
 
 int
-_modify_tuple_1 (modify_tuple_1_argument *argp, void *result, struct svc_req *rqstp)
+_modify_value_1 (Value  *argp, void *result, struct svc_req *rqstp)
 {
-	return (modify_tuple_1_svc(argp->key, argp->value1, argp->value2, argp->value3, result, rqstp));
+	return (modify_value_1_svc(*argp, result, rqstp));
 }
 
 int
-_delete_tuple_1 (int  *argp, void *result, struct svc_req *rqstp)
+_delete_key_1 (int  *argp, void *result, struct svc_req *rqstp)
 {
-	return (delete_tuple_1_svc(*argp, result, rqstp));
+	return (delete_key_1_svc(*argp, result, rqstp));
 }
 
 int
-_check_existence_1 (int  *argp, void *result, struct svc_req *rqstp)
+_exist_1 (int  *argp, void *result, struct svc_req *rqstp)
 {
-	return (check_existence_1_svc(*argp, result, rqstp));
+	return (exist_1_svc(*argp, result, rqstp));
 }
 
 int
-_copy_tuple_1 (copy_tuple_1_argument *argp, void *result, struct svc_req *rqstp)
+_copy_key_1 (TwoKeys  *argp, void *result, struct svc_req *rqstp)
 {
-	return (copy_tuple_1_svc(argp->key1, argp->key2, result, rqstp));
+	return (copy_key_1_svc(*argp, result, rqstp));
 }
 
 static void
 tuple_service_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
-		set_tuple_1_argument set_tuple_1_arg;
-		int get_tuple_1_arg;
-		modify_tuple_1_argument modify_tuple_1_arg;
-		int delete_tuple_1_arg;
-		int check_existence_1_arg;
-		copy_tuple_1_argument copy_tuple_1_arg;
+		Value set_value_1_arg;
+		int get_value_1_arg;
+		Value modify_value_1_arg;
+		int delete_key_1_arg;
+		int exist_1_arg;
+		TwoKeys copy_key_1_arg;
 	} argument;
 	union {
-		status init_service_1_res;
-		status set_tuple_1_res;
-		tuple get_tuple_1_res;
-		status modify_tuple_1_res;
-		status delete_tuple_1_res;
-		status check_existence_1_res;
-		status copy_tuple_1_res;
+		int init_1_res;
+		int set_value_1_res;
+		Value get_value_1_res;
+		int modify_value_1_res;
+		int delete_key_1_res;
+		int exist_1_res;
+		int copy_key_1_res;
 	} result;
 	bool_t retval;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -87,46 +87,46 @@ tuple_service_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		(void) svc_sendreply (transp, (xdrproc_t) xdr_void, (char *)NULL);
 		return;
 
-	case init_service:
+	case INIT:
 		_xdr_argument = (xdrproc_t) xdr_void;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_init_service_1;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_init_1;
 		break;
 
-	case set_tuple:
-		_xdr_argument = (xdrproc_t) xdr_set_tuple_1_argument;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_set_tuple_1;
+	case SET_VALUE:
+		_xdr_argument = (xdrproc_t) xdr_Value;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_set_value_1;
 		break;
 
-	case get_tuple:
+	case GET_VALUE:
 		_xdr_argument = (xdrproc_t) xdr_int;
-		_xdr_result = (xdrproc_t) xdr_tuple;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_get_tuple_1;
+		_xdr_result = (xdrproc_t) xdr_Value;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_get_value_1;
 		break;
 
-	case modify_tuple:
-		_xdr_argument = (xdrproc_t) xdr_modify_tuple_1_argument;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_modify_tuple_1;
+	case MODIFY_VALUE:
+		_xdr_argument = (xdrproc_t) xdr_Value;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_modify_value_1;
 		break;
 
-	case delete_tuple:
+	case DELETE_KEY:
 		_xdr_argument = (xdrproc_t) xdr_int;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_delete_tuple_1;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_delete_key_1;
 		break;
 
-	case check_existence:
+	case EXIST:
 		_xdr_argument = (xdrproc_t) xdr_int;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_check_existence_1;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_exist_1;
 		break;
 
-	case copy_tuple:
-		_xdr_argument = (xdrproc_t) xdr_copy_tuple_1_argument;
-		_xdr_result = (xdrproc_t) xdr_status;
-		local = (bool_t (*) (char *, void *,  struct svc_req *))_copy_tuple_1;
+	case COPY_KEY:
+		_xdr_argument = (xdrproc_t) xdr_TwoKeys;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_copy_key_1;
 		break;
 
 	default:

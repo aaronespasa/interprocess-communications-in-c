@@ -15,104 +15,81 @@ extern "C" {
 #endif
 
 
-struct tuple {
-	char *value1;
-	int value2;
-	double value3;
-};
-typedef struct tuple tuple;
-
-typedef int status;
-
-struct set_tuple_1_argument {
+struct Value {
 	int key;
 	char *value1;
 	int value2;
 	double value3;
 };
-typedef struct set_tuple_1_argument set_tuple_1_argument;
+typedef struct Value Value;
 
-struct modify_tuple_1_argument {
-	int key;
-	char *value1;
-	int value2;
-	double value3;
-};
-typedef struct modify_tuple_1_argument modify_tuple_1_argument;
-
-struct copy_tuple_1_argument {
+struct TwoKeys {
 	int key1;
 	int key2;
 };
-typedef struct copy_tuple_1_argument copy_tuple_1_argument;
+typedef struct TwoKeys TwoKeys;
 
 #define TUPLE_SERVICE 13391170
 #define TUPLE_SERVICE_V1 1
 
 #if defined(__STDC__) || defined(__cplusplus)
-#define init_service 1
-extern  enum clnt_stat init_service_1(status *, CLIENT *);
-extern  bool_t init_service_1_svc(status *, struct svc_req *);
-#define set_tuple 2
-extern  enum clnt_stat set_tuple_1(int , char *, int , double , status *, CLIENT *);
-extern  bool_t set_tuple_1_svc(int , char *, int , double , status *, struct svc_req *);
-#define get_tuple 3
-extern  enum clnt_stat get_tuple_1(int , tuple *, CLIENT *);
-extern  bool_t get_tuple_1_svc(int , tuple *, struct svc_req *);
-#define modify_tuple 4
-extern  enum clnt_stat modify_tuple_1(int , char *, int , double , status *, CLIENT *);
-extern  bool_t modify_tuple_1_svc(int , char *, int , double , status *, struct svc_req *);
-#define delete_tuple 5
-extern  enum clnt_stat delete_tuple_1(int , status *, CLIENT *);
-extern  bool_t delete_tuple_1_svc(int , status *, struct svc_req *);
-#define check_existence 6
-extern  enum clnt_stat check_existence_1(int , status *, CLIENT *);
-extern  bool_t check_existence_1_svc(int , status *, struct svc_req *);
-#define copy_tuple 7
-extern  enum clnt_stat copy_tuple_1(int , int , status *, CLIENT *);
-extern  bool_t copy_tuple_1_svc(int , int , status *, struct svc_req *);
+#define INIT 1
+extern  enum clnt_stat init(int *, CLIENT *);
+extern  bool_t init_1_svc(int *, struct svc_req *);
+#define SET_VALUE 2
+extern  enum clnt_stat set_value(Value , int *, CLIENT *);
+extern  bool_t set_value_1_svc(Value , int *, struct svc_req *);
+#define GET_VALUE 3
+extern  enum clnt_stat get_value(int , Value *, CLIENT *);
+extern  bool_t get_value_1_svc(int , Value *, struct svc_req *);
+#define MODIFY_VALUE 4
+extern  enum clnt_stat modify_value(Value , int *, CLIENT *);
+extern  bool_t modify_value_1_svc(Value , int *, struct svc_req *);
+#define DELETE_KEY 5
+extern  enum clnt_stat delete_key(int , int *, CLIENT *);
+extern  bool_t delete_key_1_svc(int , int *, struct svc_req *);
+#define EXIST 6
+extern  enum clnt_stat exist(int , int *, CLIENT *);
+extern  bool_t exist_1_svc(int , int *, struct svc_req *);
+#define COPY_KEY 7
+extern  enum clnt_stat copy_key(TwoKeys , int *, CLIENT *);
+extern  bool_t copy_key_1_svc(TwoKeys , int *, struct svc_req *);
 extern int tuple_service_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
-#define init_service 1
-extern  enum clnt_stat init_service_1();
-extern  bool_t init_service_1_svc();
-#define set_tuple 2
-extern  enum clnt_stat set_tuple_1();
-extern  bool_t set_tuple_1_svc();
-#define get_tuple 3
-extern  enum clnt_stat get_tuple_1();
-extern  bool_t get_tuple_1_svc();
-#define modify_tuple 4
-extern  enum clnt_stat modify_tuple_1();
-extern  bool_t modify_tuple_1_svc();
-#define delete_tuple 5
-extern  enum clnt_stat delete_tuple_1();
-extern  bool_t delete_tuple_1_svc();
-#define check_existence 6
-extern  enum clnt_stat check_existence_1();
-extern  bool_t check_existence_1_svc();
-#define copy_tuple 7
-extern  enum clnt_stat copy_tuple_1();
-extern  bool_t copy_tuple_1_svc();
+#define INIT 1
+extern  enum clnt_stat init();
+extern  bool_t init_1_svc();
+#define SET_VALUE 2
+extern  enum clnt_stat set_value();
+extern  bool_t set_value_1_svc();
+#define GET_VALUE 3
+extern  enum clnt_stat get_value();
+extern  bool_t get_value_1_svc();
+#define MODIFY_VALUE 4
+extern  enum clnt_stat modify_value();
+extern  bool_t modify_value_1_svc();
+#define DELETE_KEY 5
+extern  enum clnt_stat delete_key();
+extern  bool_t delete_key_1_svc();
+#define EXIST 6
+extern  enum clnt_stat exist();
+extern  bool_t exist_1_svc();
+#define COPY_KEY 7
+extern  enum clnt_stat copy_key();
+extern  bool_t copy_key_1_svc();
 extern int tuple_service_1_freeresult ();
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern  bool_t xdr_tuple (XDR *, tuple*);
-extern  bool_t xdr_status (XDR *, status*);
-extern  bool_t xdr_set_tuple_1_argument (XDR *, set_tuple_1_argument*);
-extern  bool_t xdr_modify_tuple_1_argument (XDR *, modify_tuple_1_argument*);
-extern  bool_t xdr_copy_tuple_1_argument (XDR *, copy_tuple_1_argument*);
+extern  bool_t xdr_Value (XDR *, Value*);
+extern  bool_t xdr_TwoKeys (XDR *, TwoKeys*);
 
 #else /* K&R C */
-extern bool_t xdr_tuple ();
-extern bool_t xdr_status ();
-extern bool_t xdr_set_tuple_1_argument ();
-extern bool_t xdr_modify_tuple_1_argument ();
-extern bool_t xdr_copy_tuple_1_argument ();
+extern bool_t xdr_Value ();
+extern bool_t xdr_TwoKeys ();
 
 #endif /* K&R C */
 

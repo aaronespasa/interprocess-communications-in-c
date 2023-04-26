@@ -5,9 +5,84 @@
  */
 
 #include "tuplas.h"
+#include "servidor.h"
+
+// We'll use semaphores to control the access as readers/writers
+#include <semaphore.h>
+#include <pthread.h>
+
+LinkedList *list = NULL;
+
+// The wait() and post() semaphores are atomic -> do not assure order
+
+sem_t writer_sem;										// semaphores for readers and writers
+pthread_mutex_t reader_mut = PTHREAD_MUTEX_INITIALIZER; // mutex for the reader_count variable and its initialization
+int reader_count = 0;									// number of readers reading
+bool is_semaphore_initialized = false;					// semaphore initialization flag
+bool is_list_created = false;							// linked list creation flag
+
+void init_sem()
+{
+	// Initialize the semaphore
+	pthread_mutex_lock(&reader_mut);
+	if (!is_list_created)
+	{
+		list = create_linked_list();
+		is_list_created = true;
+	}
+
+	if (!is_semaphore_initialized)
+	{
+		sem_init(&writer_sem, 0, 1);
+		is_semaphore_initialized = true;
+	}
+	pthread_mutex_unlock(&reader_mut);
+}
 
 bool_t
-init_service_1_svc(status *result, struct svc_req *rqstp)
+init_1_svc(int *result, struct svc_req *rqstp)
+{
+	bool_t retval = TRUE;
+
+	// Initialize the semaphore if it is not initialized
+	init_sem();
+
+	// Writer tries to get the write semaphore
+	sem_wait(&writer_sem);
+
+	// initialize linked list
+	*result = init_ll(list);
+
+	// Writer releases the write semaphore
+	sem_post(&writer_sem);
+
+	return retval;
+}
+
+bool_t
+set_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
+{
+	bool_t retval = TRUE;
+
+	// Initialize the semaphore if it is not initialized
+	init_sem();
+
+	// Writer tries to get the write semaphore
+	sem_wait(&writer_sem);
+
+	// Insert request in the linked list
+	*result = set_value_ll(list, value.key, value.value1, value.value2, value.value3);
+
+	// Writer releases the write semaphore
+	sem_post(&writer_sem);
+
+	display_list(list);
+
+	return retval;
+}
+
+bool_t
+get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
@@ -19,7 +94,7 @@ init_service_1_svc(status *result, struct svc_req *rqstp)
 }
 
 bool_t
-set_tuple_1_svc(int key, char *value1, int value2, double value3, status *result,  struct svc_req *rqstp)
+modify_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
@@ -31,7 +106,7 @@ set_tuple_1_svc(int key, char *value1, int value2, double value3, status *result
 }
 
 bool_t
-get_tuple_1_svc(int key, tuple *result,  struct svc_req *rqstp)
+delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
@@ -43,7 +118,7 @@ get_tuple_1_svc(int key, tuple *result,  struct svc_req *rqstp)
 }
 
 bool_t
-modify_tuple_1_svc(int key, char *value1, int value2, double value3, status *result,  struct svc_req *rqstp)
+exist_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
@@ -55,31 +130,7 @@ modify_tuple_1_svc(int key, char *value1, int value2, double value3, status *res
 }
 
 bool_t
-delete_tuple_1_svc(int key, status *result,  struct svc_req *rqstp)
-{
-	bool_t retval;
-
-	/*
-	 * insert server code here
-	 */
-
-	return retval;
-}
-
-bool_t
-check_existence_1_svc(int key, status *result,  struct svc_req *rqstp)
-{
-	bool_t retval;
-
-	/*
-	 * insert server code here
-	 */
-
-	return retval;
-}
-
-bool_t
-copy_tuple_1_svc(int key1, int key2, status *result,  struct svc_req *rqstp)
+copy_key_1_svc(TwoKeys keys, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 

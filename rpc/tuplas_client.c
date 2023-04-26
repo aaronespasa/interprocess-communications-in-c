@@ -12,69 +12,70 @@ tuple_service_1(char *host)
 {
 	CLIENT *clnt;
 	enum clnt_stat retval_1;
-	status result_1;
+	int result_1;
 	enum clnt_stat retval_2;
-	status result_2;
-	int set_tuple_1_key;
-	char *set_tuple_1_value1;
-	int set_tuple_1_value2;
-	double set_tuple_1_value3;
-	enum clnt_stat retval_3;
-	tuple result_3;
-	int get_tuple_1_key;
-	enum clnt_stat retval_4;
-	status result_4;
-	int modify_tuple_1_key;
-	char *modify_tuple_1_value1;
-	int modify_tuple_1_value2;
-	double modify_tuple_1_value3;
-	enum clnt_stat retval_5;
-	status result_5;
-	int delete_tuple_1_key;
-	enum clnt_stat retval_6;
-	status result_6;
-	int check_existence_1_key;
-	enum clnt_stat retval_7;
-	status result_7;
-	int copy_tuple_1_key1;
-	int copy_tuple_1_key2;
+	int result_2;
+	Value set_value_value;
+	set_value_value.key = 1;
+	set_value_value.value1 = "hola";
+	set_value_value.value2 = 3;
+	set_value_value.value3 = 4.5;
+	// enum clnt_stat retval_3;
+	// Value result_3;
+	// int get_value_key;
+	// enum clnt_stat retval_4;
+	// int result_4;
+	// Value modify_value_value;
+	// enum clnt_stat retval_5;
+	// int result_5;
+	// int delete_key_key;
+	// enum clnt_stat retval_6;
+	// int result_6;
+	// int exist_key;
+	// enum clnt_stat retval_7;
+	// int result_7;
+	// TwoKeys copy_key_keys;
 
 #ifndef	DEBUG
-	clnt = clnt_create (host, TUPLE_SERVICE, TUPLE_SERVICE_V1, "udp");
+		clnt = clnt_create(host, TUPLE_SERVICE, TUPLE_SERVICE_V1, "udp");
 	if (clnt == NULL) {
 		clnt_pcreateerror (host);
 		exit (1);
 	}
 #endif	/* DEBUG */
 
-	retval_1 = init_service_1(&result_1, clnt);
+	retval_1 = init(&result_1, clnt);
 	if (retval_1 != RPC_SUCCESS) {
 		clnt_perror (clnt, "call failed");
+	} else {
+		printf("init: %d\n", result_1);
 	}
-	retval_2 = set_tuple_1(set_tuple_1_key, set_tuple_1_value1, set_tuple_1_value2, set_tuple_1_value3, &result_2, clnt);
+	retval_2 = set_value(set_value_value, &result_2, clnt);
 	if (retval_2 != RPC_SUCCESS) {
 		clnt_perror (clnt, "call failed");
+	} else {
+		printf("set_value: %d\n", result_2);
 	}
-	retval_3 = get_tuple_1(get_tuple_1_key, &result_3, clnt);
-	if (retval_3 != RPC_SUCCESS) {
-		clnt_perror (clnt, "call failed");
-	}
-	retval_4 = modify_tuple_1(modify_tuple_1_key, modify_tuple_1_value1, modify_tuple_1_value2, modify_tuple_1_value3, &result_4, clnt);
-	if (retval_4 != RPC_SUCCESS) {
-		clnt_perror (clnt, "call failed");
-	}
-	retval_5 = delete_tuple_1(delete_tuple_1_key, &result_5, clnt);
-	if (retval_5 != RPC_SUCCESS) {
-		clnt_perror (clnt, "call failed");
-	}
-	retval_6 = check_existence_1(check_existence_1_key, &result_6, clnt);
-	if (retval_6 != RPC_SUCCESS) {
-		clnt_perror (clnt, "call failed");
-	}
-	retval_7 = copy_tuple_1(copy_tuple_1_key1, copy_tuple_1_key2, &result_7, clnt);
-	if (retval_7 != RPC_SUCCESS) {
-		clnt_perror (clnt, "call failed");
-	}
+	// retval_3 = get_value(get_value_key, &result_3, clnt);
+	// if (retval_3 != RPC_SUCCESS) {
+	// 	clnt_perror (clnt, "call failed");
+	// }
+	// retval_4 = modify_value(modify_value_value, &result_4, clnt);
+	// if (retval_4 != RPC_SUCCESS) {
+	// 	clnt_perror (clnt, "call failed");
+	// }
+	// retval_5 = delete_key(delete_key_key, &result_5, clnt);
+	// if (retval_5 != RPC_SUCCESS) {
+	// 	clnt_perror (clnt, "call failed");
+	// }
+	// retval_6 = exist(exist_key, &result_6, clnt);
+	// if (retval_6 != RPC_SUCCESS) {
+	// 	clnt_perror (clnt, "call failed");
+	// }
+	// retval_7 = copy_key(copy_key_1_keys, &result_7, clnt);
+	// if (retval_7 != RPC_SUCCESS) {
+	// 	clnt_perror (clnt, "call failed");
+	// }
 #ifndef	DEBUG
 	clnt_destroy (clnt);
 #endif	 /* DEBUG */
@@ -93,4 +94,4 @@ main (int argc, char *argv[])
 	host = argv[1];
 	tuple_service_1 (host);
 exit (0);
-	}
+}
