@@ -84,11 +84,57 @@ set_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
 bool_t
 get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
 {
-	bool_t retval;
+	bool_t retval = TRUE;
 
-	/*
-	 * insert server code here
-	 */
+	// Initialize the semaphore if it is not initialized
+    init_sem();
+
+    // Acquire the reader mutex
+    pthread_mutex_lock(&reader_mut);
+
+    // Increment the reader count
+    reader_count++;
+
+    // If it's the first reader, try to get the write semaphore
+    if (reader_count == 1)
+    {
+        if (sem_trywait(&writer_sem) != 0)
+        {
+            pthread_mutex_unlock(&reader_mut);
+            sem_post(&writer_sem);
+            return -1; // return error code indicating that the lock was not acquired
+        }
+    }
+
+    // Release the reader mutex
+    pthread_mutex_unlock(&reader_mut);
+
+    // Get request from the linked list
+    if (list != NULL)
+    {
+        *result = get_value(list, key, value1, value2, value3);
+    }
+    else
+    {
+        *result = -1;
+    }
+
+    // Acquire the reader mutex
+    pthread_mutex_lock(&reader_mut);
+
+    // Decrement the reader count
+    reader_count--;
+
+    // If it's the last reader, release the write semaphore
+    if (reader_count == 0)
+    {
+        sem_post(&writer_sem);
+    }
+
+    // Release the reader mutex
+    pthread_mutex_unlock(&reader_mut);
+
+	display_list(list);
 
 	return retval;
 }
@@ -96,11 +142,21 @@ get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
 bool_t
 modify_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
 {
-	bool_t retval;
+	bool_t retval = TRUE;
 
-	/*
-	 * insert server code here
-	 */
+    // Initialize the semaphore if it is not initialized
+    init_sem();
+
+    // Writer tries to get the write semaphore
+    sem_wait(&writer_sem);
+
+    // Create request
+    *result = modify_value(list, key, value1, value2, value3);
+
+    // Writer releases the write semaphore
+    sem_post(&writer_sem);
+
+	display_list(list);
 
 	return retval;
 }
@@ -108,11 +164,21 @@ modify_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
 bool_t
 delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
-	bool_t retval;
+	bool_t retval = TRUE;
 
-	/*
-	 * insert server code here
-	 */
+	// Initialize the semaphore if it is not initialized
+    init_sem();
+
+    // Writer tries to get the write semaphore
+    sem_wait(&writer_sem);
+
+    // Delete request from the linked list
+    *result = delete_key(list, key);
+
+    // Writer releases the write semaphore
+    sem_post(&writer_sem);
+
+	display_list(list);
 
 	return retval;
 }
@@ -120,11 +186,50 @@ delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
 bool_t
 exist_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
-	bool_t retval;
+	bool_t retval = TRUE;
 
-	/*
-	 * insert server code here
-	 */
+	// Initialize the semaphore if it is not initialized
+    init_sem();
+
+    // Acquire the reader mutex
+    pthread_mutex_lock(&reader_mut);
+
+    // Increment the reader count
+    reader_count++;
+
+    // If it's the first reader, try to get the write semaphore
+    if (reader_count == 1)
+    {
+        if (sem_trywait(&writer_sem) != 0)
+        {
+            pthread_mutex_unlock(&reader_mut);
+            sem_post(&writer_sem);
+            return -1; // return error code indicating that the lock was not acquired
+        }
+    }
+
+    // Release the reader mutex
+    pthread_mutex_unlock(&reader_mut);
+
+    // Check if key exists in the linked list
+    *result = exist(list, key);
+
+    // Acquire the reader mutex
+    pthread_mutex_lock(&reader_mut);
+
+    // Decrement the reader count
+    reader_count--;
+
+    // If it's the last reader, release the write semaphore
+    if (reader_count == 0)
+    {
+        sem_post(&writer_sem);
+    }
+
+    // Release the reader mutex
+    pthread_mutex_unlock(&reader_mut);
+
+	display_list(list);
 
 	return retval;
 }
@@ -132,11 +237,21 @@ exist_1_svc(int key, int *result,  struct svc_req *rqstp)
 bool_t
 copy_key_1_svc(TwoKeys keys, int *result,  struct svc_req *rqstp)
 {
-	bool_t retval;
+	bool_t retval = TRUE;
 
-	/*
-	 * insert server code here
-	 */
+	// Initialize the semaphore if it is not initialized
+    init_sem();
+
+    // Writer tries to get the write semaphore
+    sem_wait(&writer_sem);
+
+    // Copy request from key1 to key2 in the linked list
+    *result = copy_key(list, key1, key2);
+
+    // Writer releases the write semaphore
+    sem_post(&writer_sem);
+
+	display_list(list);
 
 	return retval;
 }

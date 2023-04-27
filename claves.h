@@ -31,7 +31,7 @@
 int init();
 
 /**
- * @brief Insert a new element clave-valor1-valor2-valor3 in the service.
+ * @brief Insert a new element clave-valor1-valor2-valor3 idon the service.
  * @param key int
  * @param value1 char*
  * @param value2 int
