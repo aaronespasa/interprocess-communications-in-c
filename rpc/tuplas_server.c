@@ -76,8 +76,6 @@ set_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
 	// Writer releases the write semaphore
 	sem_post(&writer_sem);
 
-	display_list(list);
-
 	return retval;
 }
 
@@ -109,15 +107,27 @@ get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
     // Release the reader mutex
     pthread_mutex_unlock(&reader_mut);
 
+    char value1_cpy[255] = "";
+    int* value2_cpy = malloc(sizeof(int));
+    double* value3_cpy = malloc(sizeof(double));
+    *value2_cpy = 0;
+    *value3_cpy = 0.0;
+
+    result->value1 = malloc(strlen(value1_cpy) + 1); // ! PENDIENTE, EVITAR MALLOC
+
+    int error_code = -1;
     // Get request from the linked list
-    if (list != NULL)
-    {
-        *result = get_value(list, key, value1, value2, value3);
+    if (list != NULL) {
+        error_code = get_value_ll(list, key, value1_cpy, value2_cpy, value3_cpy);
+        strncpy(result->value1, value1_cpy, strlen(value1_cpy) + 1);
+        result->value2 = *value2_cpy;
+        result->value3 = *value3_cpy;
     }
-    else
-    {
-        *result = -1;
-    }
+    
+    free(value2_cpy);
+    free(value3_cpy);
+
+    result->key = error_code;
 
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
@@ -134,9 +144,7 @@ get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
     // Release the reader mutex
     pthread_mutex_unlock(&reader_mut);
 
-	display_list(list);
-
-	return retval;
+    return retval;
 }
 
 bool_t
@@ -151,12 +159,12 @@ modify_value_1_svc(Value value, int *result,  struct svc_req *rqstp)
     sem_wait(&writer_sem);
 
     // Create request
-    *result = modify_value(list, key, value1, value2, value3);
+    *result = modify_value_ll(list, value.key, value.value1, value.value2, value.value3);
 
     // Writer releases the write semaphore
     sem_post(&writer_sem);
 
-	display_list(list);
+	// display_list(list);
 
 	return retval;
 }
@@ -173,12 +181,12 @@ delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
     sem_wait(&writer_sem);
 
     // Delete request from the linked list
-    *result = delete_key(list, key);
+    *result = delete_key_ll(list, key);
 
     // Writer releases the write semaphore
     sem_post(&writer_sem);
 
-	display_list(list);
+	// display_list(list);
 
 	return retval;
 }
@@ -212,7 +220,7 @@ exist_1_svc(int key, int *result,  struct svc_req *rqstp)
     pthread_mutex_unlock(&reader_mut);
 
     // Check if key exists in the linked list
-    *result = exist(list, key);
+    *result = exist_ll(list, key);
 
     // Acquire the reader mutex
     pthread_mutex_lock(&reader_mut);
@@ -246,7 +254,7 @@ copy_key_1_svc(TwoKeys keys, int *result,  struct svc_req *rqstp)
     sem_wait(&writer_sem);
 
     // Copy request from key1 to key2 in the linked list
-    *result = copy_key(list, key1, key2);
+    *result = copy_key_ll(list, keys.key1, keys.key2);
 
     // Writer releases the write semaphore
     sem_post(&writer_sem);
