@@ -30,7 +30,8 @@ Entry *search(LinkedList *list, int key)
 }
 
 /**
- * Create a new entry with the given key and value.
+ * @brief 
+ * 
  */
 Entry *create_entry(int key, char *value1, int value2, double value3)
 {
@@ -133,7 +134,7 @@ int exist_ll(LinkedList *list, int key)
 
 int init_ll(LinkedList *list)
 {
-  printf("\nInitializing the linked list...\n");
+  printf("\n✨ Initializing the linked list...\n");
   Entry *current = list->head;
   while (current != NULL)
   {
@@ -154,11 +155,10 @@ int init_ll(LinkedList *list)
 
 int set_value_ll(LinkedList *list, int key, char *value1, int value2, double value3)
 {
+  printf("\nInserting a new entry into the linked list...\n");
+
   if (exist_ll(list, key) == 1)
-  {
-    perror("\nThe provided key already exists");
     return -1;
-  }
 
   Entry *entry = create_entry(key, value1, value2, value3);
 
@@ -202,13 +202,12 @@ int set_value_ll(LinkedList *list, int key, char *value1, int value2, double val
  */
 int get_value_ll(LinkedList *list, int key, char *value1, int *value2, double *value3)
 {
+  printf("\nGetting the value of an entry with the given key...\n");
+
   Entry *entry = search(list, key);
 
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
 
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
   if (value1 == NULL || value2 == NULL || value3 == NULL)
@@ -232,12 +231,13 @@ int get_value_ll(LinkedList *list, int key, char *value1, int *value2, double *v
  */
 int modify_value_ll(LinkedList *list, int key, char *value1, int value2, double value3)
 {
+  printf("\nModifying the value of an entry with the given key...\n");
+
   Entry *entry = search(list, key);
+ 
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
+  
   strcpy(entry->value1, value1);
   entry->value2 = value2;
   entry->value3 = value3;
@@ -250,12 +250,13 @@ int modify_value_ll(LinkedList *list, int key, char *value1, int value2, double 
  */
 int delete_key_ll(LinkedList *list, int key)
 {
+  printf("\nDeleting an entry with the given key...\n");
+
   Entry *entry = search(list, key);
+  
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
+  
   // If the entry is the head of the list, delete it.
   if (entry == list->head)
   {
@@ -289,12 +290,12 @@ int delete_key_ll(LinkedList *list, int key)
 //   */
 int copy_key_ll(LinkedList *list, int key1, int key2)
 {
+  printf("\nCopying the value of an entry with the given key...\n");
+
   Entry *entry1 = search(list, key1);
+
   if (entry1 == NULL)
-  {
-    perror("\nThe provided key to copy to already exists");
     return -1;
-  }
 
   // If key2 exists, modify its value.
   // If key2 does not exist, create a new entry with key2 and the value of key1.

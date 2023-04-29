@@ -10,7 +10,7 @@
 static struct timeval TIMEOUT = { 25, 0 };
 
 enum clnt_stat 
-init(int *clnt_res, CLIENT *clnt)
+init_clnt(int *clnt_res, CLIENT *clnt)
 {
 	 return (clnt_call (clnt, INIT, (xdrproc_t) xdr_void, (caddr_t) NULL,
 		(xdrproc_t) xdr_int, (caddr_t) clnt_res,
@@ -19,7 +19,7 @@ init(int *clnt_res, CLIENT *clnt)
 }
 
 enum clnt_stat 
-set_value(Value value, int *clnt_res,  CLIENT *clnt)
+set_value_clnt(Value value, int *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, SET_VALUE,
 		(xdrproc_t) xdr_Value, (caddr_t) &value,
@@ -28,7 +28,7 @@ set_value(Value value, int *clnt_res,  CLIENT *clnt)
 }
 
 enum clnt_stat 
-get_value(int key, Value *clnt_res,  CLIENT *clnt)
+get_value_clnt(int key, Value *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, GET_VALUE,
 		(xdrproc_t) xdr_int, (caddr_t) &key,
@@ -37,7 +37,7 @@ get_value(int key, Value *clnt_res,  CLIENT *clnt)
 }
 
 enum clnt_stat 
-modify_value(Value value, int *clnt_res,  CLIENT *clnt)
+modify_value_clnt(Value value, int *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, MODIFY_VALUE,
 		(xdrproc_t) xdr_Value, (caddr_t) &value,
@@ -46,7 +46,7 @@ modify_value(Value value, int *clnt_res,  CLIENT *clnt)
 }
 
 enum clnt_stat 
-delete_key(int key, int *clnt_res,  CLIENT *clnt)
+delete_key_clnt(int key, int *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, DELETE_KEY,
 		(xdrproc_t) xdr_int, (caddr_t) &key,
@@ -55,7 +55,7 @@ delete_key(int key, int *clnt_res,  CLIENT *clnt)
 }
 
 enum clnt_stat 
-exist(int key, int *clnt_res,  CLIENT *clnt)
+exist_clnt(int key, int *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, EXIST,
 		(xdrproc_t) xdr_int, (caddr_t) &key,
@@ -64,7 +64,7 @@ exist(int key, int *clnt_res,  CLIENT *clnt)
 }
 
 enum clnt_stat 
-copy_key(TwoKeys keys, int *clnt_res,  CLIENT *clnt)
+copy_key_clnt(TwoKeys keys, int *clnt_res,  CLIENT *clnt)
 {
 	return (clnt_call(clnt, COPY_KEY,
 		(xdrproc_t) xdr_TwoKeys, (caddr_t) &keys,

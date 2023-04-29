@@ -1,6 +1,16 @@
+// #include "claves.h"
+
 #include "tuplas.h"
+
 #include <pthread.h> /* For threads */
-#define NUM_THREADS 2
+#include <stdio.h>   /* For printf() */
+#include <stdlib.h>  /* For exit() */
+
+#define NUM_THREADS 1
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+CLIENT *clnt = NULL;
 
 typedef struct thread_data
 {
@@ -15,16 +25,20 @@ int busy = TRUE;
 
 thread_data th_data;
 
-void test_init(unsigned long thread_num, int print_value, CLIENT* clnt)
+int test_init(unsigned long thread_num, int print_value, CLIENT* clnt)
 {
-	int result = -1;
-	enum clnt_stat ret = RPC_FAILED;
-	
-	ret = init(&result, clnt);
+	// int result = init();
 
-	if (ret != RPC_SUCCESS) {
+	int result = -1;
+
+	enum clnt_stat ret = RPC_FAILED;
+
+	ret = init_clnt(&result, clnt);
+
+	if (ret != RPC_SUCCESS)
+	{
 		clnt_perror(clnt, "call failed");
-		return;
+		return -1;
 	}
 
 	if (print_value == TRUE)
@@ -40,9 +54,10 @@ void test_init(unsigned long thread_num, int print_value, CLIENT* clnt)
 	}
 
 	// printf("✅ (init): Success: la lista se limpió correctamente para realizar las pruebas\n\n");
+	return result;
 }
 
-void test_set_value(int key, char value1[256], int value2, double value3, unsigned long thread_num, int print_value, CLIENT *clnt)
+int test_set_value(int key, char value1[256], int value2, double value3, unsigned long thread_num, int print_value, CLIENT *clnt)
 {
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
@@ -53,11 +68,11 @@ void test_set_value(int key, char value1[256], int value2, double value3, unsign
 	set_value_value.value2 = value2;
 	set_value_value.value3 = value3;
 
-	ret = set_value(set_value_value, &result, clnt);
+	ret = set_value_clnt(set_value_value, &result, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return ret;
 	}
 
 	if (print_value == TRUE)
@@ -73,9 +88,13 @@ void test_set_value(int key, char value1[256], int value2, double value3, unsign
 				   thread_num, result, set_value_value.value1, set_value_value.value2, set_value_value.value3, set_value_value.key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result set: %d\n", result);
+	return result;
 }
 
-void test_get_value(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
+int test_get_value(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
 {
 	enum clnt_stat ret = RPC_FAILED;
 	
@@ -88,11 +107,11 @@ void test_get_value(int key, unsigned long thread_num, int print_value, CLIENT* 
 	result_3.value2 = 0;
 	result_3.value3 = 0.0;
 
-	ret = get_value(key, &result_3, clnt);
+	ret = get_value_clnt(key, &result_3, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return result_3.key;
 	}
 
 	if (print_value == TRUE)
@@ -108,9 +127,13 @@ void test_get_value(int key, unsigned long thread_num, int print_value, CLIENT* 
 				thread_num, result_3.key, key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result get: %d\n", result_3.key);
+	return result_3.key;
 }
 
-void test_modify_value(int key, char value1_modified[256], int value2, double value3, unsigned long thread_num, int print_value, CLIENT* clnt)
+int test_modify_value(int key, char value1_modified[256], int value2, double value3, unsigned long thread_num, int print_value, CLIENT* clnt)
 {
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
@@ -121,11 +144,11 @@ void test_modify_value(int key, char value1_modified[256], int value2, double va
 	modify_value_value.value2 = value2;
 	modify_value_value.value3 = value3;
 
-	ret = modify_value(modify_value_value, &result, clnt);
+	ret = modify_value_clnt(modify_value_value, &result, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return result;
 	}
 
 	if (print_value == TRUE)
@@ -141,18 +164,23 @@ void test_modify_value(int key, char value1_modified[256], int value2, double va
 				   thread_num, result, modify_value_value.value1, modify_value_value.value2, modify_value_value.value3, modify_value_value.key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result modify: %d\n", result);
+	return result;
 }
 
-void test_delete_key(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
+// TODO: NOTA, error delete key
+int test_delete_key(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
 {
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
 
-	ret = delete_key(key, &result, clnt);
+	ret = delete_key_clnt(key, &result, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return result;
 	}
 
 	if (print_value == TRUE)
@@ -166,18 +194,22 @@ void test_delete_key(int key, unsigned long thread_num, int print_value, CLIENT*
 			printf("(delete_key - %lu):    Error (código %d) al eliminar la clave %d\n", thread_num, result, key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result delete: %d\n", result);
+	return result;
 }
 
-void test_exist_key(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
+int test_exist_key(int key, unsigned long thread_num, int print_value, CLIENT* clnt)
 {
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
 
-	ret = exist(key, &result, clnt);
+	ret = exist_clnt(key, &result, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return result;
 	}
 
 	if (print_value == TRUE)
@@ -195,9 +227,13 @@ void test_exist_key(int key, unsigned long thread_num, int print_value, CLIENT* 
 			printf("(exist - %lu):         Error (código %d) al verificar si la clave %d existe\n", thread_num, result, key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result exist: %d\n", result);
+	return result;
 }
 
-void test_copy_key(int key, int new_key, unsigned long thread_num, int print_value, CLIENT* clnt)
+int test_copy_key(int key, int new_key, unsigned long thread_num, int print_value, CLIENT* clnt)
 {
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
@@ -206,11 +242,11 @@ void test_copy_key(int key, int new_key, unsigned long thread_num, int print_val
 	copy_key_keys.key1 = key;
 	copy_key_keys.key2 = new_key;
 
-	ret = copy_key(copy_key_keys, &result, clnt);
+	ret = copy_key_clnt(copy_key_keys, &result, clnt);
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return;
+		return result;
 	}
 
 	if (print_value == TRUE)
@@ -224,6 +260,10 @@ void test_copy_key(int key, int new_key, unsigned long thread_num, int print_val
 			printf("(copy_key - %lu):      Error (código %d) al copiar la clave %d en la clave %d\n", thread_num, result, key, new_key);
 		}
 	}
+
+	// Return the error code
+	// printf("Result copy: %d\n", result);
+	return result;
 }
 
 int check_one_thread(unsigned long thread_num, char *test_name)
@@ -239,6 +279,378 @@ int check_one_thread(unsigned long thread_num, char *test_name)
 	}
 }
 
+/**
+ * @brief Test the get_value function before the set_value function
+ * @param thread_num
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */ 
+void test_get_before_set(thread_data th_data_copy, char value1[256])
+{    
+    if (check_one_thread(th_data_copy.thread_num, "test_get_before_set") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int get_ret = test_get_value(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Get the value of the key 1
+    int set_ret = test_set_value(1, value1, 3, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+
+    if (init_ret == 0 && get_ret == -1 && set_ret == 0)
+        printf("✅ (test_get_before_set): Success: get_value returned -1 before set_value\n\n");
+    else
+        printf("❌ (test_get_before_set): Error: get_value returned %d before set_value returned %d\n\n", get_ret, set_ret);
+}
+
+/**
+ * @brief Test the modify_value function before the set_value function
+ * @param thread_num 
+ * @param value1_modified 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_modify_value_before_set(thread_data th_data_copy, char value1_modified[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_modify_value_before_set") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+	int modify_ret = test_modify_value(1, value1_modified, 6, 6.28, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Modify the value of the key 1
+    int set_ret = test_set_value(1, value1_modified, 3, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+
+    if (init_ret == 0 && modify_ret == -1 && set_ret == 0)
+        printf("✅ (test_modify_value_before_set): Success: modify_value returned -1 before set_value\n\n");
+    else
+        printf("❌ (test_modify_value_before_set): Error: modify_value returned %d before set_value returned %d\n\n", modify_ret, set_ret);
+}
+
+/**
+ * @brief Test the delete_key function before the set_value function
+ * @param thread_num 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_delete_key_before_set(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_delete_key_before_set") == -1)
+        return;
+
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int delete_ret = test_delete_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 1
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+
+    if (init_ret == 0 && delete_ret == -1 && set_ret == 0)
+        printf("✅ (test_delete_key_before_set): Success: delete_key returned -1 before set_value\n\n");
+    else
+        printf("❌ (test_delete_key_before_set): Error: delete_key returned %d before set_value returned %d\n\n", delete_ret, set_ret);
+}
+
+/**
+ * @brief Test the copy_key function before the set_value function
+ * @param thread_num 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_copy_key_before_set(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_copy_key_before_set") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 into the key 2
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+
+    if (init_ret == 0 && copy_ret == -1 && set_ret == 0)
+        printf("✅ (test_copy_key_before_set): Success: copy_key returned -1 before set_value\n\n");
+    else
+        printf("❌ (test_copy_key_before_set): Error: copy_key returned %d before set_value returned %d\n\n", copy_ret, set_ret);
+}
+
+/**
+ * @brief Test the exist function before the set_value function
+ * @param thread_num 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_exist_before_set(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_exist_before_set") == -1)
+        return;
+	
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int exist_ret = test_exist_key(4, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Check if the key 4 exists
+    int set_ret = test_set_value(4, value1, 10, 24.24, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 4
+
+    if (init_ret == 0 && exist_ret == 0 && set_ret == 0) // if entry is not found in the list, exist returns 0
+        printf("✅ (test_exist_before_set): Success: exist returned -1 before set_value\n\n");
+    else
+        printf("❌ (test_exist_before_set): Error: exist returned %d before set_value returned %d\n\n", exist_ret, set_ret);
+}
+
+/**
+ * @brief Test the get_value function after the delete_key function
+ * @param thread_num 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_get_after_delete(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_get_after_delete") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int delete_ret = test_delete_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 1
+    int get_ret = test_get_value(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Get the value of the key 1
+
+    if (init_ret == 0 && set_ret == 0 && delete_ret == 0 && get_ret == -1)
+        printf("✅ (test_get_after_delete): Success: get_value returned -1 after delete_key\n\n");
+    else
+        printf("❌ (test_get_after_delete): Error: get_value returned %d after delete_key returned %d\n\n", get_ret, delete_ret);
+}
+
+/**
+ * @brief Test the modify_value function after the delete_key function
+ * @param thread_num 
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_modify_after_delete(thread_data th_data_copy, char value1[256], char value1_modified[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_modify_after_delete") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int delete_ret = test_delete_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 1
+    int modify_ret = test_modify_value(1, value1_modified, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Modify the value of the key 1
+
+    if (init_ret == 0 && set_ret == 0 && delete_ret == 0 && modify_ret == -1)
+        printf("✅ (test_modify_after_delete): Success: modify_value returned -1 after delete_key\n\n");
+    else
+        printf("❌ (test_modify_after_delete): Error: modify_value returned %d after delete_key returned %d\n\n", modify_ret, delete_ret);
+}
+
+/**
+ * @brief Test the copy_key function after the delete_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_copy_after_delete(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_copy_after_delete") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int delete_ret = test_delete_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+
+    if (init_ret == 0 && set_ret == 0 && delete_ret == 0 && copy_ret == -1)
+        printf("✅ (test_copy_after_delete): Success: copy_key returned -1 after delete_key\n\n");
+    else
+        printf("❌ (test_copy_after_delete): Error: copy_key returned %d after delete_key returned %d\n\n", copy_ret, delete_ret);
+}
+
+/**
+ * @brief Test the exist function after the delete_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_exist_after_delete(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_exist_after_delete") == -1)
+        return;
+    
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int delete_ret = test_delete_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 1
+    int exist_ret = test_exist_key(1, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Check if the key 1 exists
+
+    if (init_ret == 0 && set_ret == 0 && delete_ret == 0 && exist_ret == 0) // if entry is not found in the list, exist returns 0
+        printf("✅ (test_exist_after_delete): Success: exist returned -1 after delete_key\n\n");
+    else
+        printf("❌ (test_exist_after_delete): Error: exist returned %d after delete_key returned %d\n\n", exist_ret, delete_ret);
+}
+
+/**
+ * @brief Test the copy_key function after the set_value function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_copy_after_set(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_copy_after_set") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+
+    if (init_ret == 0 && set_ret == 0 && copy_ret == 0)
+        printf("✅ (test_copy_after_set): Success: copy_key returned 0 after set_value\n\n");
+    else
+        printf("❌ (test_copy_after_set): Error: copy_key returned %d after set_value returned %d\n\n", copy_ret, set_ret);
+}
+
+/**
+ * @brief Test the get_value function after the copy_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_get_after_copy(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_get_after_copy") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+    int get_ret = test_get_value(2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Get the value of the key 2
+
+    if (init_ret == 0 && set_ret == 0 && copy_ret == 0 && get_ret == 0)
+        printf("✅ (test_get_after_copy): Success: get_value returned 0 after copy_key\n\n");
+    else
+        printf("❌ (test_get_after_copy): Error: get_value returned %d after copy_key returned %d\n\n", get_ret, copy_ret);
+}
+
+/**
+ * @brief Test the get_value function after the modify_value function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_copy_after_modified(thread_data th_data_copy, char value1[256], char value1_modified[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_copy_after_modified") == -1)
+        return;
+
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int modify_ret = test_modify_value(1,value1_modified, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Modify the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+
+    if (init_ret == 0 && set_ret == 0 && modify_ret == 0 && copy_ret == 0)
+        printf("✅ (test_copy_after_modified): Success: copy_key returned 0 after modify_value\n\n");
+    else
+        printf("❌ (test_copy_after_modified): Error: copy_key returned %d after modify_value returned %d\n\n", copy_ret, modify_ret);
+}
+
+/**
+ * @brief Test the modify_value function after the copy_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_modify_after_copy(thread_data th_data_copy, char value1[256], char value1_modified[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_modify_after_copy") == -1)
+        return;
+    
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+    int modify_ret = test_modify_value(2, value1_modified, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Modify the value of the key 2
+
+    if (init_ret == 0 && set_ret == 0 && copy_ret == 0 && modify_ret == 0)
+        printf("✅ (test_modify_after_copy): Success: modify_value returned 0 after copy_key\n\n");
+    else
+        printf("❌ (test_modify_after_copy): Error: modify_value returned %d after copy_key returned %d\n\n", modify_ret, copy_ret);
+}
+
+/**
+ * @brief Test the copy_key function after the copy_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_copy_after_copy(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_copy_after_copy") == -1)
+        return;
+    
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+    int copy_ret2 = test_copy_key(2, 3, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 2 to key 3
+
+    if (init_ret == 0 && set_ret == 0 && copy_ret == 0 && copy_ret2 == 0)
+        printf("✅ (test_copy_after_copy): Success: copy_key returned 0 after copy_key\n\n");
+    else
+        printf("❌ (test_copy_after_copy): Error: copy_key returned %d after copy_key returned %d\n\n", copy_ret2, copy_ret);
+}
+
+/**
+ * @brief Test the delete_key function after the copy_key function
+ * @param th_data_copy
+ * @note This test MUST be run with only one thread (sequential execution),
+ *       otherwise the execution is not guaranteed to be correct
+ */
+void test_delete_after_copy(thread_data th_data_copy, char value1[256])
+{
+    if (check_one_thread(th_data_copy.thread_num, "test_delete_after_copy") == -1)
+        return;
+    
+    int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
+
+	int init_ret = test_init(th_data_copy.thread_num, FALSE, th_data_copy.clnt);  // Initialize the server    
+    int set_ret = test_set_value(1, value1, 1234, 3.1416, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Set the value of the key 1
+    int copy_ret = test_copy_key(1, 2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Copy the key 1 to key 2
+    int delete_ret = test_delete_key(2, th_data_copy.thread_num, FALSE, th_data_copy.clnt); // Delete the key 2
+
+    if (init_ret == 0 && set_ret == 0 && copy_ret == 0 && delete_ret == 0)
+        printf("✅ (test_delete_after_copy): Success: delete_key returned 0 after copy_key\n\n");
+    else
+        printf("❌ (test_delete_after_copy): Error: delete_key returned %d after copy_key returned %d\n\n", delete_ret, copy_ret);
+}
+
+
+// ! ------------------------------ CONCURRENCY TESTS ------------------------------
 /**
  * @brief This is a test to check the concurrency of the functions, it must be verified by hand!
  * 
@@ -280,6 +692,56 @@ void tests(thread_data *th_data) {
 	char value1[256] = "Hola mundo";
 	char value1_modified[256] = "Hola mundo, he sido modificado";
 
+	if (NUM_THREADS == 1) {
+
+		// ! Error tests
+		// ? Check error when get before set
+        test_get_before_set(th_data_copy, value1);
+
+		// ? Check error when modify before set
+		test_modify_value_before_set(th_data_copy, value1_modified);
+
+		// ? Check error when delete before set
+        test_delete_key_before_set(th_data_copy, value1);
+
+        // ? Check error when copy before set
+        test_copy_key_before_set(th_data_copy, value1);
+
+        // ? Check error when exists before set
+        test_exist_before_set(th_data_copy, value1);
+
+        // ? Check error when get after delete
+        test_get_after_delete(th_data_copy, value1);
+
+        // ? Check error when modify after delete
+        test_modify_after_delete(th_data_copy, value1, value1_modified);
+
+        // ? Check error when copy after delete
+        test_copy_after_delete(th_data_copy, value1);
+
+        // ? Check error when exists after delete
+        test_exist_after_delete(th_data_copy, value1);
+
+        // ! Success tests
+        // ? Check error when copy to an already set key
+        test_copy_after_set(th_data_copy, value1);
+
+        // ? Check error when copy to an already copied key
+        test_get_after_copy(th_data_copy, value1);
+
+        // ? Check error when copy to an already modified key
+        test_copy_after_modified(th_data_copy, value1, value1_modified);
+
+        // ? Check error when modify after copy
+        test_modify_after_copy(th_data_copy, value1, value1_modified);
+
+        // ? Check error when copy after copy
+        test_copy_after_copy(th_data_copy, value1);
+
+        // ? Check error when delete after copy
+        test_delete_after_copy(th_data_copy, value1);
+	}
+
 	if (NUM_THREADS > 1)
 		test_concurrency(th_data_copy, value1, value1_modified);
 }
@@ -318,7 +780,6 @@ void main_concurrent(CLIENT *clnt) {
 void
 tuple_service_1(char *host)
 {
-	CLIENT *clnt;
 #ifndef	DEBUG
 		clnt = clnt_create(host, TUPLE_SERVICE, TUPLE_SERVICE_V1, "udp");
 	if (clnt == NULL) {
@@ -344,5 +805,5 @@ main (int argc, char *argv[])
 	}
 	host = argv[1];
 	tuple_service_1 (host);
-exit (0);
+	exit (0);
 }

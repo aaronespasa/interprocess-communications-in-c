@@ -34,49 +34,49 @@ typedef struct TwoKeys TwoKeys;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define INIT 1
-extern  enum clnt_stat init(int *, CLIENT *);
+extern  enum clnt_stat init_clnt(int *, CLIENT *);
 extern  bool_t init_1_svc(int *, struct svc_req *);
 #define SET_VALUE 2
-extern  enum clnt_stat set_value(Value , int *, CLIENT *);
+extern  enum clnt_stat set_value_clnt(Value , int *, CLIENT *);
 extern  bool_t set_value_1_svc(Value , int *, struct svc_req *);
 #define GET_VALUE 3
-extern  enum clnt_stat get_value(int , Value *, CLIENT *);
+extern  enum clnt_stat get_value_clnt(int , Value *, CLIENT *);
 extern  bool_t get_value_1_svc(int , Value *, struct svc_req *);
 #define MODIFY_VALUE 4
-extern  enum clnt_stat modify_value(Value , int *, CLIENT *);
+extern  enum clnt_stat modify_value_clnt(Value , int *, CLIENT *);
 extern  bool_t modify_value_1_svc(Value , int *, struct svc_req *);
 #define DELETE_KEY 5
-extern  enum clnt_stat delete_key(int , int *, CLIENT *);
+extern  enum clnt_stat delete_key_clnt(int , int *, CLIENT *);
 extern  bool_t delete_key_1_svc(int , int *, struct svc_req *);
 #define EXIST 6
-extern  enum clnt_stat exist(int , int *, CLIENT *);
+extern  enum clnt_stat exist_clnt(int , int *, CLIENT *);
 extern  bool_t exist_1_svc(int , int *, struct svc_req *);
 #define COPY_KEY 7
-extern  enum clnt_stat copy_key(TwoKeys , int *, CLIENT *);
+extern  enum clnt_stat copy_key_clnt(TwoKeys , int *, CLIENT *);
 extern  bool_t copy_key_1_svc(TwoKeys , int *, struct svc_req *);
 extern int tuple_service_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define INIT 1
-extern  enum clnt_stat init();
+extern  enum clnt_stat init_clnt();
 extern  bool_t init_1_svc();
 #define SET_VALUE 2
-extern  enum clnt_stat set_value();
+extern  enum clnt_stat set_value_clnt();
 extern  bool_t set_value_1_svc();
 #define GET_VALUE 3
-extern  enum clnt_stat get_value();
+extern  enum clnt_stat get_value_clnt();
 extern  bool_t get_value_1_svc();
 #define MODIFY_VALUE 4
-extern  enum clnt_stat modify_value();
+extern  enum clnt_stat modify_value_clnt();
 extern  bool_t modify_value_1_svc();
 #define DELETE_KEY 5
-extern  enum clnt_stat delete_key();
+extern  enum clnt_stat delete_key_clnt();
 extern  bool_t delete_key_1_svc();
 #define EXIST 6
-extern  enum clnt_stat exist();
+extern  enum clnt_stat exist_clnt();
 extern  bool_t exist_1_svc();
 #define COPY_KEY 7
-extern  enum clnt_stat copy_key();
+extern  enum clnt_stat copy_key_clnt();
 extern  bool_t copy_key_1_svc();
 extern int tuple_service_1_freeresult ();
 #endif /* K&R C */

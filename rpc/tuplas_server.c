@@ -237,7 +237,7 @@ exist_1_svc(int key, int *result,  struct svc_req *rqstp)
     // Release the reader mutex
     pthread_mutex_unlock(&reader_mut);
 
-	display_list(list);
+	// display_list(list);
 
 	return retval;
 }
@@ -259,7 +259,7 @@ copy_key_1_svc(TwoKeys keys, int *result,  struct svc_req *rqstp)
     // Writer releases the write semaphore
     sem_post(&writer_sem);
 
-	display_list(list);
+	// display_list(list);
 
 	return retval;
 }
