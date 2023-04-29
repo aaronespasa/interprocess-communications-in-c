@@ -5,13 +5,13 @@
 
 #include "claves.h"
 
+CLIENT *clnt = NULL;
+
 #define localhost "127.0.0.1"
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-char* get_ip_tuplas()
+char *get_ip_tuplas()
 {
-	char* ip_tuplas = getenv("IP_TUPLAS");
+	char *ip_tuplas = getenv("IP_TUPLAS");
 	if (ip_tuplas == NULL)
 	{
 		printf("Error: IP_TUPLAS environment variable not set\n");
@@ -19,26 +19,6 @@ char* get_ip_tuplas()
 	}
 
 	return ip_tuplas;
-}
-
-int get_port_tuplas()
-{
-	char* port_tuplas = getenv("PORT_TUPLAS");
-	char *end;
-	if (port_tuplas == NULL)
-	{
-		printf("Error: PORT_TUPLAS environment variable not set\n");
-		exit(1);
-	}
-
-	int port_tuplas_int = strtol(port_tuplas, &end, 10);
-	if (*end != '\0')
-	{
-		printf("Error: PORT_TUPLAS environment variable is not a number\n");
-		exit(1);
-	}
-
-	return port_tuplas_int;
 }
 
 int value1_length(char *value)
@@ -49,176 +29,87 @@ int value1_length(char *value)
 	return 0;
 }
 
-int create_and_connect_socket()
-{
-	int sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sd == -1)
-	{
-		printf("Error creating socket\n");
-		exit(1);
-	}
-
-	struct sockaddr_in server_addr = {0};
-	bzero((char *)&server_addr, sizeof(server_addr));
-
-	char* ip_tuplas = get_ip_tuplas();
-	if(strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
-	
-	int port_tuplas = get_port_tuplas();
-	server_addr.sin_addr.s_addr = inet_addr(ip_tuplas);
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(port_tuplas);
-
-	if (connect(sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
-	{
-		printf("Error connecting to server\n");
-		// print server_addr.sin_port and server_addr.sin_addr.s_addr
-		printf("IP Tuplas: %s\n", ip_tuplas);
-		printf("Port: %d\n", ntohs(server_addr.sin_port));
-		printf("IP: %s\n", inet_ntoa(server_addr.sin_addr));
-		exit(1);
-	}
-
-	return sd;
-}
-
-void send_int(int sd, int int_value)
-{
-	if (send(sd, &int_value, sizeof(int), 0) == -1)
-	{
-		printf("Error sending integer value to the server\n");
-		exit(1);
-	}
-}
-
-void send_double(int sd, double double_value)
-{
-	if (send(sd, &double_value, sizeof(double), 0) == -1)
-	{
-		printf("Error sending double value to the server\n");
-		exit(1);
-	}
-}
-
-void send_string(int sd, char* string)
-{
-	int len = strlen(string) + 1;
-
-	if ((sendMessage(sd, string, len)) == -1)
-	{
-		printf("Error sending string to the server\n");
-		exit(1);
-	}
-}
-
-int read_int(int sd)
-{
-	int error_code = -2;
-
-	ssize_t bytes_read = read(sd, &error_code, sizeof(int));
-	if (bytes_read == -1)
-	{
-		perror("Error reading the integer value");
-		exit(1);
-	}
-
-	return error_code;
-}
-
-void read_string(int sd, char string[256])
-{
-	if((readLine(sd, string, 256)) == -1) {
-		printf("Error reading the string value");
-		exit(1);
-	}
-}
-
-double read_double(int sd)
-{
-    double double_value = -2;
-
-    ssize_t bytes_read = read(sd, &double_value, sizeof(double));
-    if (bytes_read == -1)
-    {
-        perror("Error reading the double value");
-        exit(1);
-    }
-
-    return double_value;
-}
-
-
 int init()
 {
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the init operation
-	send_int(sd, init_op);
-	// now get the response (error code)
-	int error_code = read_int(sd);
-	// close the socket
-	close(sd);
-	// return the error code
-	return error_code;
+	int result = -1;
+
+	enum clnt_stat ret = RPC_FAILED;
+
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+
+	clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL) {
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
+
+	ret = init_clnt(&result, clnt);
+	
+	if (ret != RPC_SUCCESS)
+	{
+		clnt_perror(clnt, "call failed");
+		return -1;
+	}
+
+	return result;
 }
 
 int set_value(int key, char *value1, int value2, double value3)
 {
-	// Check if len of value 1 is more than 256 chars
+	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
 
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the set value operation
-	send_int(sd, set_value_op);
-	// send the key
-	send_int(sd, key);
-	// send the value1
-	send_string(sd, value1);
-	// send the value2
-	send_int(sd, value2);
-	// send the value3
-	send_double(sd, value3);
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
 
-	// now get the response (error code)
-	int error_code = read_int(sd);
-	// close the socket
-	close(sd);
+	Value set_value_value;
+	set_value_value.key = key;
+	set_value_value.value1 = value1;
+	set_value_value.value2 = value2;
+	set_value_value.value3 = value3;
+
+	ret = set_value_clnt(set_value_value, &result, clnt);
+
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return ret;
+	}
+
 	// return the error code
-	return error_code;
+	return result;
 }
 
 int get_value(int key, char *value1, int *value2, double *value3)
 {
-	// Check if the received value is bigger than 256 -> return -1
+	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
-		
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the init operation
-	send_int(sd, get_value_op);
-	// send the key
-	send_int(sd, key);
-	// now get the response (error code)
-	int error_code = read_int(sd);
-	// if the error code is 0, then read the values
-	if (error_code == 0)
-	{
-		// read the value1
-		read_string(sd, value1);
-		// read the value2
-		*value2 = read_int(sd);
-		// read the value3
-		*value3 = read_double(sd);
+
+	enum clnt_stat ret = RPC_FAILED;
+
+	char empty_string[256] = "";
+	Value result;
+	result.key = -1;
+	result.value1 = empty_string;
+	result.value2 = 0;
+	result.value3 = 0.0;
+
+	ret = get_value_clnt(key, &result, clnt);
+	
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return ret;
 	}
 
-	// close the socket
-	close(sd);
+	strcpy(value1, result.value1);
+	*value2 = result.value2;
+	*value3 = result.value3;
+
 	// return the error code
-	return error_code;
+	return result.key;
 }
 
 int modify_value(int key, char *value1, int value2, double value3)
@@ -227,76 +118,74 @@ int modify_value(int key, char *value1, int value2, double value3)
 	if (value1_length(value1) == -1)
 		return -1;
 
-		// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the set value operation
-	send_int(sd, modify_value_op);
-	// send the key
-	send_int(sd, key);
-	// send the value1
-	send_string(sd, value1);
-	// send the value2
-	send_int(sd, value2);
-	// send the value3
-	send_double(sd, value3);
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
 
-	// now get the response (error code)
-	int error_code = read_int(sd);
-	// close the socket
-	close(sd);
+	Value modify_value_value;
+	modify_value_value.key = key;
+	modify_value_value.value1 = value1;
+	modify_value_value.value2 = value2;
+	modify_value_value.value3 = value3;
+
+	ret = modify_value_clnt(modify_value_value, &result, clnt);
+
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return result;
+	}
+
 	// return the error code
-	return error_code;
+	return result;
 }
 
 int delete_key(int key)
 {
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the init operation
-	send_int(sd, delete_key_op);
-	// send the key
-	send_int(sd, key);
-	// now get the response (error code)
-	int error_code = read_int(sd);
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
 
-	// close the socket
-	close(sd);
+	ret = delete_key_clnt(key, &result, clnt);
+
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return result;
+	}
+
 	// return the error code
-	return error_code;
+	return result;
 }
 
 int exist(int key)
 {
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the init operation
-	send_int(sd, exist_op);
-	// send the key
-	send_int(sd, key);
-	// now get the response (error code)
-	int error_code = read_int(sd);
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
 
-	// close the socket
-	close(sd);
+	ret = exist_clnt(key, &result, clnt);
+
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return result;
+	}
+
 	// return the error code
-	return error_code;
+	return result;
 }
 
 int copy_key(int key1, int key2)
 {
-	// create the socket, connect to the server
-	int sd = create_and_connect_socket();
-	// send the init operation
-	send_int(sd, copy_key_op);
-	// send the key1
-	send_int(sd, key1);
-	// send the key2
-	send_int(sd, key2);
-	// now get the response (error code)
-	int error_code = read_int(sd);
+	int result = -1;
+	enum clnt_stat ret = RPC_FAILED;
 
-	// close the socket
-	close(sd);
+	TwoKeys copy_key_keys;
+	copy_key_keys.key1 = key1;
+	copy_key_keys.key2 = key2;
+
+	ret = copy_key_clnt(copy_key_keys, &result, clnt);
+
+	if (ret != RPC_SUCCESS) {
+		clnt_perror(clnt, "call failed");
+		return result;
+	}
+
 	// return the error code
-	return error_code;
+	return result;
 }

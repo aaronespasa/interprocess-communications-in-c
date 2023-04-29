@@ -30,7 +30,8 @@ Entry *search(LinkedList *list, int key)
 }
 
 /**
- * Create a new entry with the given key and value.
+ * @brief 
+ * 
  */
 Entry *create_entry(int key, char *value1, int value2, double value3)
 {
@@ -111,7 +112,7 @@ void display_list(LinkedList *list)
  * Return 1 if the key exists.
  * Return 0 if the key does not exist.
  */
-int exist(LinkedList *list, int key)
+int exist_ll(LinkedList *list, int key)
 {
   Entry *entry = search(list, key);
   if (entry == NULL)
@@ -131,9 +132,9 @@ int exist(LinkedList *list, int key)
  * - copy_key
  */
 
-int init(LinkedList *list)
+int init_ll(LinkedList *list)
 {
-  printf("\nInitializing the linked list...\n");
+  printf("\n✨ Initializing the linked list...\n");
   Entry *current = list->head;
   while (current != NULL)
   {
@@ -152,13 +153,12 @@ int init(LinkedList *list)
  * Returns -1 if the insertion failed.
  */
 
-int set_value(LinkedList *list, int key, char *value1, int value2, double value3)
+int set_value_ll(LinkedList *list, int key, char *value1, int value2, double value3)
 {
-  if (exist(list, key) == 1)
-  {
-    perror("\nThe provided key already exists");
+  printf("\nInserting a new entry into the linked list...\n");
+
+  if (exist_ll(list, key) == 1)
     return -1;
-  }
 
   Entry *entry = create_entry(key, value1, value2, value3);
 
@@ -192,6 +192,7 @@ int set_value(LinkedList *list, int key, char *value1, int value2, double value3
     previous->next = entry;
   }
   list->size++;
+
   return 0;
 }
 
@@ -199,15 +200,14 @@ int set_value(LinkedList *list, int key, char *value1, int value2, double value3
  * Get the value of an entry with the given key.
  * Return -1 in case the key is not found.
  */
-int get_value(LinkedList *list, int key, char *value1, int *value2, double *value3)
+int get_value_ll(LinkedList *list, int key, char *value1, int *value2, double *value3)
 {
+  printf("\nGetting the value of an entry with the given key...\n");
+
   Entry *entry = search(list, key);
 
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
 
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
   if (value1 == NULL || value2 == NULL || value3 == NULL)
@@ -229,14 +229,15 @@ int get_value(LinkedList *list, int key, char *value1, int *value2, double *valu
  * Modify the value of an entry with the given key.
  * Return -1 in case the key is not found.
  */
-int modify_value(LinkedList *list, int key, char *value1, int value2, double value3)
+int modify_value_ll(LinkedList *list, int key, char *value1, int value2, double value3)
 {
+  printf("\nModifying the value of an entry with the given key...\n");
+
   Entry *entry = search(list, key);
+ 
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
+  
   strcpy(entry->value1, value1);
   entry->value2 = value2;
   entry->value3 = value3;
@@ -247,14 +248,15 @@ int modify_value(LinkedList *list, int key, char *value1, int value2, double val
  * Delete an entry with the given key.
  * Return -1 in case the key is not found.
  */
-int delete_key(LinkedList *list, int key)
+int delete_key_ll(LinkedList *list, int key)
 {
+  printf("\nDeleting an entry with the given key...\n");
+
   Entry *entry = search(list, key);
+  
   if (entry == NULL)
-  {
-    perror("\nThe provided key does not exist");
     return -1;
-  }
+  
   // If the entry is the head of the list, delete it.
   if (entry == list->head)
   {
@@ -286,25 +288,25 @@ int delete_key(LinkedList *list, int key)
 //   * Copy the value of an entry with the given key.
 //   * Return -1 in case the key is not found.
 //   */
-int copy_key(LinkedList *list, int key1, int key2)
+int copy_key_ll(LinkedList *list, int key1, int key2)
 {
+  printf("\nCopying the value of an entry with the given key...\n");
+
   Entry *entry1 = search(list, key1);
+
   if (entry1 == NULL)
-  {
-    perror("\nThe provided key to copy to already exists");
     return -1;
-  }
 
   // If key2 exists, modify its value.
   // If key2 does not exist, create a new entry with key2 and the value of key1.
   Entry *entry2 = search(list, key2);
   if (entry2 == NULL)
   {
-    set_value(list, key2, entry1->value1, entry1->value2, entry1->value3);
+    set_value_ll(list, key2, entry1->value1, entry1->value2, entry1->value3);
   }
   else
   {
-    modify_value(list, key2, entry1->value1, entry1->value2, entry1->value3);
+    modify_value_ll(list, key2, entry1->value1, entry1->value2, entry1->value3);
   }
 
   return 0;

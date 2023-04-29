@@ -12,7 +12,7 @@ export LD_LIBRARY_PATH
 get_compiler = $(if $(findstring guernika,$1),/opt/gcc-12.1.0/bin/gcc,gcc)
 
 # Default target
-all: dir information libclaves cliente proxy
+all: dir information cliente proxy libclaves
 
 # Print output files information 
 information:

@@ -6,8 +6,8 @@
 CLIENT = cliente
 SERVER = servidor
 
-SOURCES_CLNT.c = 
-SOURCES_CLNT.h = 
+SOURCES_CLNT.c = claves.c
+SOURCES_CLNT.h = claves.h
 SOURCES_SVC.c = LinkedList.c
 SOURCES_SVC.h = LinkedList.h servidor.h
 SOURCES.x = tuplas.x
@@ -22,12 +22,29 @@ OBJECTS_SVC = $(SOURCES_SVC.c:%.c=%.o) $(TARGETS_SVC.c:%.c=%.o)
 
 CPPFLAGS += -D_REENTRANT
 CFLAGS += -g -I/usr/include/tirpc
+# LDFLAGS = -L$(INSTALL_PATH)/lib/
 LDLIBS += -lnsl -lpthread -ldl -ltirpc
  RPCGENFLAGS = 
 
 # Targets 
 
-all : $(CLIENT) $(SERVER)
+all : dir information $(CLIENT) $(SERVER)
+
+# Print output files information 
+information:
+	@echo ''
+	@echo "Output files:"
+	@echo "  - servidor"
+	@echo "  - cliente (using libclaves.so)"
+	@echo ''
+
+# Create the ./lib directory if it doesn't exist
+dir:
+	$(shell mkdir -p lib)
+
+# Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
+# libclaves: claves.c
+# 	@$(call get_compiler, $(shell hostname)) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o ./lib/$@.so
 
 $(TARGETS) : $(SOURCES.x) 
 	rpcgen $(RPCGENFLAGS) $(SOURCES.x)
@@ -37,11 +54,13 @@ $(OBJECTS_CLNT) : $(SOURCES_CLNT.c) $(SOURCES_CLNT.h) $(TARGETS_CLNT.c)
 $(OBJECTS_SVC) : $(SOURCES_SVC.c) $(SOURCES_SVC.h) $(TARGETS_SVC.c) 
 
 $(CLIENT) : $(OBJECTS_CLNT) 
-	$(LINK.c) -o $(CLIENT) $(OBJECTS_CLNT) $(LDLIBS) 
+	$(LINK.c) -o $(CLIENT) $(OBJECTS_CLNT) $(LDLIBS)
 
 $(SERVER) : $(OBJECTS_SVC)
 	$(LINK.c) -o $(SERVER) $(OBJECTS_SVC) $(LDLIBS)
 
  clean:
-	 $(RM) core $(TARGETS) $(OBJECTS_CLNT) $(OBJECTS_SVC) $(CLIENT) $(SERVER)
+	$(RM) $(CLIENT) $(SERVER) ./lib/*.so
+	@echo -e '\n'"All files removed"'\n'
+
 

@@ -55,6 +55,9 @@ dkms.conf
 .vscode/
 .vscode/*
 
-# Output files\
+# Output files
 cliente
 servidor
+
+# Copia de seguridad
+copia-de-seguridad/

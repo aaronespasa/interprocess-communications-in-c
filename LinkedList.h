@@ -61,13 +61,13 @@ void display_list(LinkedList *list);
  * Return 1 if the key exists.
  * Return 0 if the key does not exist.
  */
-int exist(LinkedList *list, int key);
+int exist_ll(LinkedList *list, int key);
 
 /**
  * @brief Initialise service and destroys all stored tuples.
  * @return 0 if the service was initialised correctly, -1 an error occurred during communication.
  */
-int init(LinkedList *list);
+int init_ll(LinkedList *list);
 
 /**
  * @brief Insert a new element clave-valor1-valor2-valor3 in the service.
@@ -77,7 +77,7 @@ int init(LinkedList *list);
  * @param value3 double
  * @return 0 if the insertion was successful; -1 if the insertion failed.
  */
-int set_value(LinkedList *list, int key, char *value1, int value2, double value3);
+int set_value_ll(LinkedList *list, int key, char *value1, int value2, double value3);
 
 /**
  * @brief Assign the values of the element associated to the key to the variables value1, value2 and value3.
@@ -88,7 +88,7 @@ int set_value(LinkedList *list, int key, char *value1, int value2, double value3
  * @return 0 if the element exists and the values were assigned correctly; -1 if the element does not exist, or an error occurred during communication.
  * @note Values are assigned to the variables passed as parameters.
  */
-int get_value(LinkedList *list, int key, char *value1, int *value2, double *value3);
+int get_value_ll(LinkedList *list, int key, char *value1, int *value2, double *value3);
 
 /**
  * @brief
@@ -98,14 +98,14 @@ int get_value(LinkedList *list, int key, char *value1, int *value2, double *valu
  * @param value3 double
  * @return 0 if the element exists and the values were modified correctly; -1 if the element does not exist, or an error occurred during communication.
  */
-int modify_value(LinkedList *list, int key, char *value1, int value2, double value3);
+int modify_value_ll(LinkedList *list, int key, char *value1, int value2, double value3);
 
 /**
  * @brief Delete the element associated to the key.
  * @param key int
  * @return 0 if success; -1 if the element does not exist, or an error occurred during communication.
  */
-int delete_key(LinkedList *list, int key);
+int delete_key_ll(LinkedList *list, int key);
 
 /**
  * @brief Copy the element associated to the key1 to the key2.
@@ -113,6 +113,6 @@ int delete_key(LinkedList *list, int key);
  * @param key2 int
  * @return 0 if values were copied correctly to key2; -1 if the key1 does not exist, or an error occurred during communication.
  */
-int copy_key(LinkedList *list, int key1, int key2);
+int copy_key_ll(LinkedList *list, int key1, int key2);
 
 #endif
