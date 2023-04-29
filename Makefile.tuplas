@@ -67,7 +67,7 @@ $(SERVER) : $(OBJECTS_SVC)
 	$(LINK.c) -o $(SERVER) $(OBJECTS_SVC) $(LDLIBS)
 
  clean:
-	$(RM) $(CLIENT) $(SERVER) ./lib/*.so
+	$(RM) $(CLIENT) $(SERVER) *.o ./lib/*.so
 	@echo -e '\n'"All files removed"'\n'
 
 
