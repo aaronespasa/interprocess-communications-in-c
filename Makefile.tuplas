@@ -53,9 +53,6 @@ dir:
 libclaves: claves.c
 	@$(call get_compiler, $(shell hostname)) $(LDLIBS) $(CFLAGS) -fPIC -shared $^ -o ./lib/$@.so
 
-$(TARGETS) : $(SOURCES.x) 
-	rpcgen $(RPCGENFLAGS) $(SOURCES.x)
-
 $(OBJECTS_CLNT) : $(SOURCES_CLNT.c) $(SOURCES_CLNT.h) $(TARGETS_CLNT.c) 
 
 $(OBJECTS_SVC) : $(SOURCES_SVC.c) $(SOURCES_SVC.h) $(TARGETS_SVC.c) 
