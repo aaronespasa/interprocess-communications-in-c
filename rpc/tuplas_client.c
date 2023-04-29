@@ -239,6 +239,29 @@ int check_one_thread(unsigned long thread_num, char *test_name)
 	}
 }
 
+/**
+ * @brief This is a test to check the concurrency of the functions, it must be verified by hand!
+ * 
+ * @param thread_num 
+ */
+void test_concurrency(thread_data th_data_copy, char value1[256], char value1_modified[256])
+{
+    // check there are at least 2 threads
+    if (NUM_THREADS < 2) {
+        printf("❌ (test_concurrency): Error: test_concurrency requires at least 2 threads\n\n");
+        return;
+    }
+
+	test_set_value(1, value1, 3, 3.1416, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	test_get_value(1, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	test_modify_value(1, value1_modified, 6, 6.28, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	test_delete_key(1, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+
+	test_set_value(4, value1, 10, 24.24, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	test_exist_key(4, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	test_copy_key(4, 5, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+}
+
 void tests(thread_data *th_data) {
 	thread_data th_data_copy;
 	pthread_mutex_lock(&protect_init_mutex);
@@ -257,14 +280,8 @@ void tests(thread_data *th_data) {
 	char value1[256] = "Hola mundo";
 	char value1_modified[256] = "Hola mundo, he sido modificado";
 
-	test_set_value(1, value1, 3, 3.1416, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-	test_get_value(1, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-	test_modify_value(1, value1_modified, 6, 6.28, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-	test_delete_key(1, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-
-	test_set_value(4, value1, 10, 24.24, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-	test_exist_key(4, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
-	test_copy_key(4, 5, th_data_copy.thread_num, TRUE, th_data_copy.clnt);
+	if (NUM_THREADS > 1)
+		test_concurrency(th_data_copy, value1, value1_modified);
 }
 
 
