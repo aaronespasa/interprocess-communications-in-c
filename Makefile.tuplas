@@ -6,8 +6,8 @@
 CLIENT = cliente
 SERVER = servidor
 
-SOURCES_CLNT.c = claves.c
-SOURCES_CLNT.h = claves.h
+SOURCES_CLNT.c =
+SOURCES_CLNT.h =
 SOURCES_SVC.c = LinkedList.c
 SOURCES_SVC.h = LinkedList.h servidor.h
 SOURCES.x = tuplas.x
@@ -18,17 +18,24 @@ TARGETS = tuplas.h tuplas_xdr.c tuplas_clnt.c tuplas_svc.c tuplas_client.c tupla
 
 OBJECTS_CLNT = $(SOURCES_CLNT.c:%.c=%.o) $(TARGETS_CLNT.c:%.c=%.o)
 OBJECTS_SVC = $(SOURCES_SVC.c:%.c=%.o) $(TARGETS_SVC.c:%.c=%.o) 
-# Compiler flags 
 
+# Compiler flags 
 CPPFLAGS += -D_REENTRANT
 CFLAGS += -g -I/usr/include/tirpc
 # LDFLAGS = -L$(INSTALL_PATH)/lib/
 LDLIBS += -lnsl -lpthread -ldl -ltirpc
  RPCGENFLAGS = 
 
+# Adding ./lib directory to the LD_LIBRARY_PATH environment variable and exporting it
+LD_LIBRARY_PATH = $LD_LIBRARY_PATH:./lib
+export LD_LIBRARY_PATH
+
+# check if hostname == guernika using a function called get_compiler
+get_compiler = $(if $(findstring guernika,$1),/opt/gcc-12.1.0/bin/gcc,gcc)
+
 # Targets 
 
-all : dir information $(CLIENT) $(SERVER)
+all : dir information libclaves $(CLIENT) $(SERVER)
 
 # Print output files information 
 information:
@@ -43,8 +50,8 @@ dir:
 	$(shell mkdir -p lib)
 
 # Generate dynamic library (FPIC flag generates position independent code; -shared flag generates a shared object)
-# libclaves: claves.c
-# 	@$(call get_compiler, $(shell hostname)) $(LDFLAGS) $(CPPFLAGS) $(LDLIBS) -fPIC -shared $^ -o ./lib/$@.so
+libclaves: claves.c
+	@$(call get_compiler, $(shell hostname)) $(LDLIBS) $(CFLAGS) -fPIC -shared $^ -o ./lib/$@.so
 
 $(TARGETS) : $(SOURCES.x) 
 	rpcgen $(RPCGENFLAGS) $(SOURCES.x)
@@ -54,7 +61,7 @@ $(OBJECTS_CLNT) : $(SOURCES_CLNT.c) $(SOURCES_CLNT.h) $(TARGETS_CLNT.c)
 $(OBJECTS_SVC) : $(SOURCES_SVC.c) $(SOURCES_SVC.h) $(TARGETS_SVC.c) 
 
 $(CLIENT) : $(OBJECTS_CLNT) 
-	$(LINK.c) -o $(CLIENT) $(OBJECTS_CLNT) $(LDLIBS)
+	$(LINK.c) -o $(CLIENT) $(OBJECTS_CLNT) $(LDLIBS) -L./lib -lclaves -Wl,-rpath=./lib
 
 $(SERVER) : $(OBJECTS_SVC)
 	$(LINK.c) -o $(SERVER) $(OBJECTS_SVC) $(LDLIBS)
