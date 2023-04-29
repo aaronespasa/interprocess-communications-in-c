@@ -5,8 +5,6 @@
 
 #include "claves.h"
 
-CLIENT *clnt = NULL;
-
 #define localhost "127.0.0.1"
 
 char *get_ip_tuplas()
@@ -31,19 +29,19 @@ int value1_length(char *value)
 
 int init()
 {
-	int result = -1;
-
-	enum clnt_stat ret = RPC_FAILED;
-
 	char *ip_tuplas = get_ip_tuplas();
 	if (strcmp(ip_tuplas, "localhost") == 0)
 		strcpy(ip_tuplas, localhost);
 
-	clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL) {
 		clnt_pcreateerror(ip_tuplas);
 		exit(1);
 	}
+
+	int result = -1;
+
+	enum clnt_stat ret = RPC_FAILED;
 
 	ret = init_clnt(&result, clnt);
 	
@@ -53,6 +51,8 @@ int init()
 		return -1;
 	}
 
+	clnt_destroy(clnt);
+
 	return result;
 }
 
@@ -61,6 +61,16 @@ int set_value(int key, char *value1, int value2, double value3)
 	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
+
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
 
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
@@ -78,6 +88,8 @@ int set_value(int key, char *value1, int value2, double value3)
 		return ret;
 	}
 
+	clnt_destroy(clnt);
+
 	// return the error code
 	return result;
 }
@@ -87,6 +99,17 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
+
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
 
 	enum clnt_stat ret = RPC_FAILED;
 
@@ -108,6 +131,8 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	*value2 = result.value2;
 	*value3 = result.value3;
 
+	clnt_destroy(clnt);
+
 	// return the error code
 	return result.key;
 }
@@ -117,6 +142,17 @@ int modify_value(int key, char *value1, int value2, double value3)
 	// Si value1_length devuelve -1 -> return -1
 	if (value1_length(value1) == -1)
 		return -1;
+
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
 
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
@@ -140,6 +176,17 @@ int modify_value(int key, char *value1, int value2, double value3)
 
 int delete_key(int key)
 {
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
+
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
 
@@ -149,6 +196,8 @@ int delete_key(int key)
 		clnt_perror(clnt, "call failed");
 		return result;
 	}
+	
+	clnt_destroy(clnt);
 
 	// return the error code
 	return result;
@@ -156,6 +205,16 @@ int delete_key(int key)
 
 int exist(int key)
 {
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL) {
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
+
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
 
@@ -166,12 +225,25 @@ int exist(int key)
 		return result;
 	}
 
+	clnt_destroy(clnt);
+
+
 	// return the error code
 	return result;
 }
 
 int copy_key(int key1, int key2)
 {
+	char *ip_tuplas = get_ip_tuplas();
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
+	
+	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
+	if (clnt == NULL) {
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
+	}
+
 	int result = -1;
 	enum clnt_stat ret = RPC_FAILED;
 
@@ -185,6 +257,8 @@ int copy_key(int key1, int key2)
 		clnt_perror(clnt, "call failed");
 		return result;
 	}
+
+	clnt_destroy(clnt);
 
 	// return the error code
 	return result;

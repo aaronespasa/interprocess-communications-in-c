@@ -4,6 +4,8 @@
 #include <fcntl.h>    /* For O_* constants */
 #include <sys/stat.h> /* For mode constants */
 #include <sys/types.h> /* For mode constants */
+#include <sys/socket.h> /* For socket, bind, listen, accept */
+#include <netinet/in.h> /* For sockaddr_in */
 #include <arpa/inet.h>
 #include <string.h> /* For strlen, strcpy, sprintf */
 #include <unistd.h> /* For sleep */
@@ -12,9 +14,9 @@
 #include <stdio.h>  /* For printf */
 #include <stdlib.h> /* For exit */
 
-#include "tuplas.h" /* For tuplas */
+#include "tuplas.h"
 
-#define NUM_THREADS 1 /* Number of threads */
+#define NUM_THREADS 2 /* Number of threads */
 
 /**
  * @brief Initialise service and destroys all stored tuples.
