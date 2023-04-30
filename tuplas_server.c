@@ -10,6 +10,8 @@
 // We'll use semaphores to control the access as readers/writers
 #include <semaphore.h>
 #include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
 
 LinkedList *list = NULL;
 
@@ -20,6 +22,38 @@ pthread_mutex_t reader_mut = PTHREAD_MUTEX_INITIALIZER; // mutex for the reader_
 int reader_count = 0;									// number of readers reading
 bool is_semaphore_initialized = false;					// semaphore initialization flag
 bool is_list_created = false;							// linked list creation flag
+static bool interrupt_signal_thread_created = false;
+
+void cleanup_resources() {
+    sem_destroy(&writer_sem);
+    pthread_mutex_destroy(&reader_mut);
+}
+
+void handle_interrupt(int sig)
+{
+    printf("\nInterrupt signal received. Cleaning up the linked list and exiting...\n");
+
+    // Call the delete_linked_list function to clean up the list
+    delete_linked_list(list);
+
+    // Clean up the resources (semaphore and mutex)
+    cleanup_resources();
+
+    // Terminate the program with an exit status indicating that it was interrupted
+    exit(130);
+}
+
+void *monitor_signals(void *arg)
+{
+    // Register the signal handler for the interrupt signal (SIGINT)
+    signal(SIGINT, handle_interrupt);
+
+    // Block the thread and wait for signals
+    while (1)
+        pause();
+
+    return NULL;
+}
 
 void init_sem()
 {
@@ -30,6 +64,16 @@ void init_sem()
 		list = create_linked_list();
 		is_list_created = true;
 	}
+
+    if (!interrupt_signal_thread_created)
+    {
+        pthread_t interrupt_signal_thread;
+        if (pthread_create(&interrupt_signal_thread, NULL, monitor_signals, NULL) == 0) {
+            interrupt_signal_thread_created = true;
+        } else {
+            fprintf(stderr, "Error: Unable to create the signal monitoring thread.\n");
+        }
+    }
 
 	if (!is_semaphore_initialized)
 	{
@@ -113,13 +157,14 @@ get_value_1_svc(int key, Value *result,  struct svc_req *rqstp)
     *value2_cpy = 0;
     *value3_cpy = 0.0;
 
-    result->value1 = malloc(strlen(value1_cpy) + 1); // ! PENDIENTE, EVITAR MALLOC
-
     int error_code = -1;
     // Get request from the linked list
     if (list != NULL) {
         error_code = get_value_ll(list, key, value1_cpy, value2_cpy, value3_cpy);
-        strncpy(result->value1, value1_cpy, strlen(value1_cpy) + 1);
+        
+        result->value1 = malloc(strlen(value1_cpy) + 1);
+        
+        strcpy(result->value1, value1_cpy);
         result->value2 = *value2_cpy;
         result->value3 = *value3_cpy;
     }

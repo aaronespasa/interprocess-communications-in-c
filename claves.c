@@ -12,9 +12,12 @@ char *get_ip_tuplas()
 	char *ip_tuplas = getenv("IP_TUPLAS");
 	if (ip_tuplas == NULL)
 	{
-		printf("Error: IP_TUPLAS environment variable not set\n");
+		fprintf(stderr, "Error: IP_TUPLAS environment variable not set\n");
 		exit(1);
 	}
+
+	if (strcmp(ip_tuplas, "localhost") == 0)
+		strcpy(ip_tuplas, localhost);
 
 	return ip_tuplas;
 }
@@ -30,17 +33,15 @@ int value1_length(char *value)
 int init()
 {
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
 
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL) {
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
 	int result = -1;
-
 	enum clnt_stat ret = RPC_FAILED;
 
 	ret = init_clnt(&result, clnt);
@@ -48,10 +49,11 @@ int init()
 	if (ret != RPC_SUCCESS)
 	{
 		clnt_perror(clnt, "call failed");
-		return -1;
+		result = -1;
 	}
 
 	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	return result;
 }
@@ -63,12 +65,11 @@ int set_value(int key, char *value1, int value2, double value3)
 		return -1;
 
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
+
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
-	if (clnt == NULL)
-	{
+	if (clnt == NULL) {
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -85,10 +86,11 @@ int set_value(int key, char *value1, int value2, double value3)
 
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return ret;
+		result = -1;
 	}
 
 	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	// return the error code
 	return result;
@@ -101,13 +103,12 @@ int get_value(int key, char *value1, int *value2, double *value3)
 		return -1;
 
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
 
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -121,17 +122,20 @@ int get_value(int key, char *value1, int *value2, double *value3)
 	result.value3 = 0.0;
 
 	ret = get_value_clnt(key, &result, clnt);
-	
+
 	if (ret != RPC_SUCCESS) {
 		clnt_perror(clnt, "call failed");
-		return ret;
+		clnt_destroy(clnt);
+		// free(ip_tuplas);
+		return -1;
 	}
+
+	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	strcpy(value1, result.value1);
 	*value2 = result.value2;
 	*value3 = result.value3;
-
-	clnt_destroy(clnt);
 
 	// return the error code
 	return result.key;
@@ -144,13 +148,12 @@ int modify_value(int key, char *value1, int value2, double value3)
 		return -1;
 
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
 
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -165,10 +168,14 @@ int modify_value(int key, char *value1, int value2, double value3)
 
 	ret = modify_value_clnt(modify_value_value, &result, clnt);
 
-	if (ret != RPC_SUCCESS) {
+	if (ret != RPC_SUCCESS)
+	{
 		clnt_perror(clnt, "call failed");
-		return result;
+		result = -1;
 	}
+
+	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	// return the error code
 	return result;
@@ -177,13 +184,12 @@ int modify_value(int key, char *value1, int value2, double value3)
 int delete_key(int key)
 {
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
 
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -192,12 +198,14 @@ int delete_key(int key)
 
 	ret = delete_key_clnt(key, &result, clnt);
 
-	if (ret != RPC_SUCCESS) {
+	if (ret != RPC_SUCCESS)
+	{
 		clnt_perror(clnt, "call failed");
-		return result;
+		result = -1;
 	}
-	
+
 	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	// return the error code
 	return result;
@@ -206,12 +214,11 @@ int delete_key(int key)
 int exist(int key)
 {
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
 
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
 	if (clnt == NULL) {
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -220,13 +227,14 @@ int exist(int key)
 
 	ret = exist_clnt(key, &result, clnt);
 
-	if (ret != RPC_SUCCESS) {
+	if (ret != RPC_SUCCESS)
+	{
 		clnt_perror(clnt, "call failed");
-		return result;
+		result = -1;
 	}
 
 	clnt_destroy(clnt);
-
+	// free(ip_tuplas);
 
 	// return the error code
 	return result;
@@ -235,12 +243,12 @@ int exist(int key)
 int copy_key(int key1, int key2)
 {
 	char *ip_tuplas = get_ip_tuplas();
-	if (strcmp(ip_tuplas, "localhost") == 0)
-		strcpy(ip_tuplas, localhost);
-	
+
 	CLIENT *clnt = clnt_create(ip_tuplas, TUPLE_SERVICE, TUPLE_SERVICE_V1, "tcp");
-	if (clnt == NULL) {
+	if (clnt == NULL)
+	{
 		clnt_pcreateerror(ip_tuplas);
+		// free(ip_tuplas);
 		exit(1);
 	}
 
@@ -253,12 +261,14 @@ int copy_key(int key1, int key2)
 
 	ret = copy_key_clnt(copy_key_keys, &result, clnt);
 
-	if (ret != RPC_SUCCESS) {
+	if (ret != RPC_SUCCESS)
+	{
 		clnt_perror(clnt, "call failed");
-		return result;
+		result = -1;
 	}
 
 	clnt_destroy(clnt);
+	// free(ip_tuplas);
 
 	// return the error code
 	return result;

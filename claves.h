@@ -16,7 +16,7 @@
 
 #include "tuplas.h"
 
-#define NUM_THREADS 2 /* Number of threads */
+#define NUM_THREADS 1 /* Number of threads */
 
 /**
  * @brief Initialise service and destroys all stored tuples.
