@@ -1,4 +1,8 @@
-// gcc -o LinkedList.out LinkedList.c -Wall -Wextra -Werror && ./LinkedList.out
+/*
+ * File: LinkedList.c
+ * Authors: 100451339 & 100451170
+ */
+
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -47,6 +51,11 @@ void delete_entry(Entry *entry)
   free(entry);
 }
 
+void delete_list(LinkedList *list)
+{
+  free(list);
+}
+
 /**
  * Delete the entire linked list.
  */
@@ -59,7 +68,7 @@ void delete_linked_list(LinkedList *list)
     delete_entry(current);
     current = next;
   }
-  free(list);
+  delete_list(list);
 }
 
 /**
@@ -85,11 +94,11 @@ void display_list(LinkedList *list)
 
   while (current != NULL)
   {
-    printf("\nComponents of the entry %d (%p):\n", iter, current);
-    printf("Key:    %d\n", current->key);
-    printf("Value1: %s\n", current->value1);
-    printf("Value2: %d\n", current->value2);
-    printf("Value3: %f\n", current->value3);
+    printf("\nComponents of the entry %d (%p): [", iter, current);
+    printf("key: %d, ", current->key);
+    printf("val1: %s, ", current->value1);
+    printf("val2: %d, ", current->value2);
+    printf("val3: %f]\n", current->value3);
     current = current->next;
     iter++;
   }
@@ -122,20 +131,36 @@ int exist(LinkedList *list, int key)
  * - copy_key
  */
 
+int init(LinkedList *list)
+{
+  printf("\nInitializing the linked list...\n");
+  Entry *current = list->head;
+  while (current != NULL)
+  {
+    Entry *next = current->next;
+    delete_entry(current);
+    current = next;
+  }
+  list->head = NULL; // Update the head of the list to NULL as it is empty now
+  list->size = 0;    // Update the size of the list
+  return 0;
+}
+
 /**
  * Insert a new entry into the linked list. The entry is inserted sorted by key.
  * Returns 0 if the insertion was successful.
  * Returns -1 if the insertion failed.
  */
+
 int set_value(LinkedList *list, int key, char *value1, int value2, double value3)
 {
-  Entry *entry = create_entry(key, value1, value2, value3);
-
   if (exist(list, key) == 1)
   {
     perror("\nThe provided key already exists");
     return -1;
   }
+
+  Entry *entry = create_entry(key, value1, value2, value3);
 
   // If the list is empty, insert the entry at the head.
   if (list->head == NULL)
@@ -184,13 +209,6 @@ int get_value(LinkedList *list, int key, char *value1, int *value2, double *valu
     return -1;
   }
 
-  // Comprobamos que el puntero de list no es NULL
-  if (list == NULL)
-  {
-    perror("\nThe list pointer is NULL!");
-    return -1;
-  }
-
   // Comprobamos que los punteros de value1, value2 y value3 no son NULL
   if (value1 == NULL || value2 == NULL || value3 == NULL)
   {
@@ -225,10 +243,10 @@ int modify_value(LinkedList *list, int key, char *value1, int value2, double val
   return 0;
 }
 
-// /**
-//   * Delete an entry with the given key.
-//   * Return -1 in case the key is not found.
-//   */
+/**
+ * Delete an entry with the given key.
+ * Return -1 in case the key is not found.
+ */
 int delete_key(LinkedList *list, int key)
 {
   Entry *entry = search(list, key);
